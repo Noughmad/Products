@@ -1,5 +1,5 @@
-include <BOSL2 / std.scad>
-include <BOSL2 / joiners.scad>
+include <BOSL2/std.scad>
+include <BOSL2/joiners.scad>
 
 length = 100;
 height = 40;

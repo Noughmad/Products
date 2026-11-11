@@ -1,5 +1,5 @@
-include <BOSL2 / std.scad>
-include <BOSL2 / screws.scad>
+include <BOSL2/std.scad>
+include <BOSL2/screws.scad>
 ;
 
 cap_radius = 50;

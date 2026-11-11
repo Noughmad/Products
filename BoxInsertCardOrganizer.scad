@@ -1,4 +1,4 @@
-include <BOSL2 / std.scad>
+include <BOSL2/std.scad>
 
 BoxLength = 345;
 BoxWidth = 235;

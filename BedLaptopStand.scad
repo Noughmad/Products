@@ -1,5 +1,5 @@
-include <BOSL2 / std.scad>
-include <BOSL2 / transforms.scad>
+include <BOSL2/std.scad>
+include <BOSL2/transforms.scad>
 
 thickness = 10;
 height = 10;

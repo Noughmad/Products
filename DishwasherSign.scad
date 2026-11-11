@@ -1,5 +1,5 @@
-include <BOSL2 / std.scad>
-include <BOSL2 / joiners.scad>
+include <BOSL2/std.scad>
+include <BOSL2/joiners.scad>
 
 $fn = 360;
 

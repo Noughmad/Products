@@ -1,4 +1,4 @@
-include <BOSL2 / std.scad>
+include <BOSL2/std.scad>
 
 turn_radius = 40;
 angle = 60;
