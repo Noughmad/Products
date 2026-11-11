@@ -9,6 +9,7 @@ repos:
       - id: clang-format
         name: clang-format (OpenSCAD)
         types: [file]
+        types_or: []
         files: '\.scad$'
         exclude: '^BOSL2/'
         args: [-i]
