@@ -66,8 +66,8 @@ Hook_depth = 1.85;
 
 Box_front_delta = (Box_front_thickness - Box_thickness) / 2;
 
-module hinge(inner, in_place = true) {
-  knuckle_hinge(length = Box_width_outer, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
+module hinge(inner, in_place = true, length = Box_width_outer) {
+  knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
 }
 
 module side(length = Box_depth, start_in_place = true) {
@@ -431,36 +431,37 @@ module with_grab_cutout(section_length, shell_offset = 0) {
   }
 }
 
-module section_dice_box(section_length) {
+module section_dice_box(section_length, push_hole = true) {
   right(section_length / 2)
     with_grab_cutout(section_length) {
       // Top wall
-      intersection() {
-        cuboid([section_length, Box_width_outer, Section_wall_height], anchor = BOTTOM);
-        section_grab_cutout(section_length, shell_offset = Box_thickness);
+      difference() {
+        intersection() {
+          cuboid([section_length, Box_width_outer, Section_wall_height], anchor = BOTTOM);
+          section_grab_cutout(section_length, shell_offset = Box_thickness);
+        }
+        if (push_hole) {
+          up(Box_height)
+            fwd(Box_cutout_width / 2 - Box_cutout_offset)
+              xrot(-45)
+                cyl(r = section_length / 2 - 2 * Thickness, h = 100);
+        }
       }
       // Section front and back half-walls
       zrot(90)
         yflip_copy()
           back(section_length / 2)
             wall(Section_wall_half_thickness, Box_width_outer);
-      // Floor
-      cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
-      // Side wall with magnets
+      // Floor with magnets
       difference() {
-        back(Box_width_outer / 2)
-          wall(Box_thickness, section_length);
-        back(Box_width / 2) {
-          up(25)
-            right(6)
-              xrot(-90)
-                magnet_hole();
-          up(25)
-            left(6)
-              xrot(-90)
-                magnet_hole();
-        }
+        cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
+        up(Box_thickness)
+          zflip()
+            magnet_hole();
       }
+      // Side wall
+      back(Box_width_outer / 2)
+        wall(Box_thickness, section_length);
     }
 }
 
@@ -470,7 +471,7 @@ module section_grab_cutout(section_length, shell_offset = 0, for_insert = false)
       cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_depth], rounding = Box_cutout_rounding + shell_offset, edges = [BOTTOM + FRONT, BOTTOM + BACK], anchor = TOP);
       cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_rounding - shell_offset], rounding = -Box_cutout_rounding + shell_offset, edges = [TOP + FRONT, TOP + BACK], anchor = TOP);
       fwd(Box_cutout_offset)
-        cuboid([section_length, Box_width, Box_thickness], anchor = BOTTOM);
+        cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
       if (for_insert) {
         cuboid([section_length, Box_width_outer / 2, Box_cutout_depth], anchor = TOP + FRONT);
       }
@@ -485,42 +486,63 @@ module cuboid_with_cutout(length, width, height, d, shell_offset) {
 }
 
 module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset) {
-  difference() {
-    up(d)
-      cuboid([length, width, height - d], anchor = BOTTOM);
-    section_grab_cutout(length, shell_offset, for_insert = true);
-  }
+  left(length / 2)
+    difference() {
+      up(d)
+        cuboid([length, width, height - d], anchor = BOTTOM);
+      section_grab_cutout(length, shell_offset, for_insert = true);
+    }
 }
 
 module magnet_hole() {
   cyl(r = Magnet_diameter / 2, h = Box_magnet_depth, anchor = BOTTOM);
 }
 
-Dice_box_open_angle = 0;
+Dice_box_open_angle = 90;
 
 module dice_box(section_length) {
-  dice_box_half(section_length / 2 - 0.15);
-}
-
-module dice_box_half(height, inner = false) {
-  yrot(Dice_box_open_angle) {
-    difference() {
-      cuboid_with_cutout_for_insert(height, Box_width, Box_height, 0, shell_offset = Box_thickness + 1);
-      left(Box_thickness / 2)
-        cuboid_with_cutout_for_insert(height - Box_thickness, Box_width - 2 * Box_thickness, Box_height, Box_thickness, shell_offset = 2 * Box_thickness + 1);
-      back(Box_width / 2)
-        up(25 - Box_thickness)
-          left(height / 2 - 6)
-            xrot(90)
-              magnet_hole();
+  up(Thickness / 2)
+    xflip_copy() {
+      right(section_length / 2 - Thickness / 2)
+        yrot(Dice_box_open_angle) {
+          right(Thickness / 2)
+            up(Hinge_offset) {
+              dice_box_half(section_length / 2);
+              left(Thickness / 2)
+                zrot(90)
+                  zflip()
+                    hinge(false, length = Box_width);
+            }
+        }
     }
+
+  // Connecting bottom wall
+  difference() {
+    cuboid([section_length - 2 * Hinge_offset - Thickness, Box_width, Thickness], anchor = BOTTOM) {
+      position(RIGHT)
+        orient(anchor = RIGHT)
+          xflip()
+            hinge(true, length = Box_width);
+      position(LEFT)
+        orient(anchor = LEFT)
+          hinge(true, length = Box_width);
+    }
+
+    magnet_hole();
+
   }
 }
 
-right(200)
-  wall_with_curve(2, 100);
-right(400)
-  section_cards(45);
+Dice_box_thickness = 1.2;
+
+module dice_box_half(height, inner = false) {
+  difference() {
+    cuboid_with_cutout_for_insert(height - 0.15, Box_width, Box_height, 0, shell_offset = Box_thickness + 0.2);
+    left(Thickness)
+      cuboid_with_cutout_for_insert(height - Dice_box_thickness - 0.15, Box_width - 2 * Dice_box_thickness, Box_height, 0, shell_offset = Dice_box_thickness + Box_thickness + 0.2);
+  }
+}
+
 right(445)
   section_cards(15);
 right(460)
