@@ -26,7 +26,7 @@ Hinge_offset = Thickness/2+0.2;
 
 Box_cutout_width = Box_width/2;
 Box_cutout_depth = Box_height*2/5;
-Box_cutout_rounding = 12;
+Box_cutout_rounding = Box_cutout_depth/2;
 Hinge_segments = 9;
 
 Sideboard_separator_offset = 1;
@@ -58,7 +58,7 @@ Include_plugs = false;
 top_rounding_angle = asin(Top_rounding_size/Top_rounding_radius);
 top_rounding_offset = Top_rounding_radius * (1 - cos(top_rounding_angle));
 
-Box_magnets_inside = true;
+Box_magnets_inside = false;
 Closing_hooks = true;
 Hook_diameter = 5.85;
 Hook_depth = 1.85;
