@@ -1,5 +1,5 @@
-include <../BOSL2/std.scad>
-include <../BOSL2/hinges.scad>
+include <BOSL2/std.scad>
+include <BOSL2/hinges.scad>
 
 $fn=180;
 
