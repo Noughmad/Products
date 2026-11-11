@@ -1,0 +1,14 @@
+# See https://pre-commit.com for more information
+# Exclude the BOSL2 submodule directory from all hooks
+exclude: '^BOSL2/'
+
+repos:
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v19.1.7
+    hooks:
+      - id: clang-format
+        name: clang-format (OpenSCAD)
+        types: [file]
+        files: '\.scad$'
+        exclude: '^BOSL2/'
+        args: [-i]

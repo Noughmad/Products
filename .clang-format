@@ -1,0 +1,14 @@
+---
+# clang-format configuration tailored for OpenSCAD (.scad)
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 120
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+SpacesBeforeTrailingComments: 2
+AlignAfterOpenBracket: Align
+...
