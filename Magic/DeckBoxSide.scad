@@ -24,9 +24,10 @@ Thickness = 3.25;
 Handle_cut_length = 20;
 Hinge_offset = Thickness / 2 + 0.2;
 
-Box_cutout_width = Box_width / 2;
-Box_cutout_depth = Box_height * 2 / 5;
+Box_cutout_width = Box_width / 3;
+Box_cutout_depth = Box_height * 1 / 4;
 Box_cutout_rounding = Box_cutout_depth / 2;
+Box_cutout_offset = Box_width / 6;
 Hinge_segments = 9;
 
 Sideboard_separator_offset = 1;
@@ -197,11 +198,11 @@ module next_segment(prev_length) {
       children();
 }
 
-module grab_cutout() {
-  up(Box_height_outer / 2 - Box_cutout_depth / 2)
-    cuboid([Box_depth_outer + 2, Box_cutout_width, Box_cutout_depth], rounding = Box_cutout_rounding, edges = "X");
-  up(Box_height_outer / 2 - Box_cutout_depth / 4)
-    cuboid([Box_depth_outer + 2, Box_cutout_width, Box_cutout_depth / 2], rounding = -Box_cutout_rounding, edges = [TOP + FRONT, TOP + BACK]);
+module grab_cutout(shell_offset = 0) {
+  up(Box_height_outer / 2 - Box_cutout_depth / 2 - shell_offset)
+    cuboid([Box_depth_outer + 2, Box_cutout_width, Box_cutout_depth], rounding = Box_cutout_rounding - shell_offset, edges = "X");
+  up(Box_height_outer / 2 - Box_cutout_depth / 4 - shell_offset)
+    cuboid([Box_depth_outer + 2, Box_cutout_width, Box_cutout_depth / 2], rounding = -Box_cutout_rounding - shell_offset, edges = [TOP + FRONT, TOP + BACK]);
 }
 
 module box_base() {
@@ -385,11 +386,15 @@ module top_rounding_corner() {
 
 Section_wall_thickness = Separator_thickness;
 Section_wall_half_thickness = Section_wall_thickness / 2;
-Section_wall_height = Box_height;
+Section_wall_height = Box_height + Box_thickness;
+
+module wall(thickness, length) {
+  cuboid([length, thickness, Section_wall_height], anchor = BOTTOM + BACK);
+}
 
 module wall_with_curve(thickness, length) {
   intersection() {
-    cuboid([length, thickness, Section_wall_height], anchor = BOTTOM + BACK);
+    wall(thickness, length);
     union() {
       cuboid([length, thickness, Section_wall_height - Top_rounding_size], anchor = BOTTOM + BACK);
       up(Section_wall_height - Top_rounding_size)
@@ -401,29 +406,65 @@ module wall_with_curve(thickness, length) {
 }
 
 module section_cards(section_length) {
-  with_grab_cutout() {
-    // Side box walls
-    yflip_copy()
-      back(Box_width / 2)
-        wall_with_curve(Box_thickness, section_length);
-    // Section front and back half-walls
-    zrot(90)
+  right(section_length / 2)
+    with_grab_cutout(section_length) {
+      // Side box walls
       yflip_copy()
-        back(section_length / 2)
-          wall_with_curve(Section_wall_half_thickness, Box_width);
+        back(Box_width_outer / 2)
+          wall_with_curve(Box_thickness, section_length);
+      // Section front and back half-walls
+      zrot(90)
+        yflip_copy()
+          back(section_length / 2)
+            wall_with_curve(Section_wall_half_thickness, Box_width_outer);
+      // Floor
+      cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
+    }
+}
+
+module with_grab_cutout(section_length) {
+  difference() {
+    union() {
+      children();
+    }
+    section_grab_cutout(section_length);
   }
 }
 
-module with_grab_cutout() {
-  union() {
-    children();
-    grab_cutout();
-  }
+module section_dice_box(section_length) {
+  right(section_length / 2)
+    with_grab_cutout(section_length) {
+      // Top wall
+      intersection() {
+        cuboid([section_length, Box_width_outer, Section_wall_height], anchor = BOTTOM);
+        section_grab_cutout(section_length, shell_offset = Box_thickness);
+      }
+      // Section front and back half-walls
+      zrot(90)
+        yflip_copy()
+          back(section_length / 2)
+            wall(Section_wall_half_thickness, Box_width_outer);
+      // Floor
+      cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
+
+    }
+}
+
+module section_grab_cutout(section_length, shell_offset = 0) {
+  up(Section_wall_height - shell_offset)
+    back(Box_cutout_offset) {
+      cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_depth], rounding = Box_cutout_rounding + shell_offset, edges = [BOTTOM + FRONT, BOTTOM + BACK], anchor = TOP);
+      cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_rounding - shell_offset], rounding = -Box_cutout_rounding + shell_offset, edges = [TOP + FRONT, TOP + BACK], anchor = TOP);
+      fwd(Box_cutout_offset)
+        cuboid([section_length, Box_width, Box_thickness], anchor = BOTTOM);
+    }
 }
 
 right(200)
   wall_with_curve(2, 100);
 right(400)
   section_cards(45);
-right(430)
+right(445)
   section_cards(15);
+right(460)
+  section_dice_box(30);
