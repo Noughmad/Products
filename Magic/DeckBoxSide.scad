@@ -422,12 +422,12 @@ module section_cards(section_length) {
     }
 }
 
-module with_grab_cutout(section_length) {
+module with_grab_cutout(section_length, shell_offset = 0) {
   difference() {
     union() {
       children();
     }
-    section_grab_cutout(section_length);
+    section_grab_cutout(section_length, shell_offset);
   }
 }
 
@@ -452,11 +452,11 @@ module section_dice_box(section_length) {
           wall(Box_thickness, section_length);
         back(Box_width / 2) {
           up(25)
-            right(section_length / 5)
+            right(6)
               xrot(-90)
                 magnet_hole();
           up(25)
-            left(section_length / 5)
+            left(6)
               xrot(-90)
                 magnet_hole();
         }
@@ -464,23 +464,57 @@ module section_dice_box(section_length) {
     }
 }
 
-module section_grab_cutout(section_length, shell_offset = 0) {
+module section_grab_cutout(section_length, shell_offset = 0, for_insert = false) {
   up(Section_wall_height - shell_offset)
     back(Box_cutout_offset) {
       cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_depth], rounding = Box_cutout_rounding + shell_offset, edges = [BOTTOM + FRONT, BOTTOM + BACK], anchor = TOP);
       cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_rounding - shell_offset], rounding = -Box_cutout_rounding + shell_offset, edges = [TOP + FRONT, TOP + BACK], anchor = TOP);
       fwd(Box_cutout_offset)
         cuboid([section_length, Box_width, Box_thickness], anchor = BOTTOM);
+      if (for_insert) {
+        cuboid([section_length, Box_width_outer / 2, Box_cutout_depth], anchor = TOP + FRONT);
+      }
     }
+}
+
+module cuboid_with_cutout(length, width, height, d, shell_offset) {
+  with_grab_cutout(length, shell_offset) {
+    up(d)
+      cuboid([length, width, height - d], anchor = BOTTOM);
+  }
+}
+
+module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset) {
+  difference() {
+    up(d)
+      cuboid([length, width, height - d], anchor = BOTTOM);
+    section_grab_cutout(length, shell_offset, for_insert = true);
+  }
 }
 
 module magnet_hole() {
   cyl(r = Magnet_diameter / 2, h = Box_magnet_depth, anchor = BOTTOM);
 }
 
-Dice_box_open_angle = 90;
+Dice_box_open_angle = 0;
 
 module dice_box(section_length) {
+  dice_box_half(section_length / 2 - 0.15);
+}
+
+module dice_box_half(height, inner = false) {
+  yrot(Dice_box_open_angle) {
+    difference() {
+      cuboid_with_cutout_for_insert(height, Box_width, Box_height, 0, shell_offset = Box_thickness + 1);
+      left(Box_thickness / 2)
+        cuboid_with_cutout_for_insert(height - Box_thickness, Box_width - 2 * Box_thickness, Box_height, Box_thickness, shell_offset = 2 * Box_thickness + 1);
+      back(Box_width / 2)
+        up(25 - Box_thickness)
+          left(height / 2 - 6)
+            xrot(90)
+              magnet_hole();
+    }
+  }
 }
 
 right(200)
