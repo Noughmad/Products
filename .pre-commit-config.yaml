@@ -3,13 +3,13 @@
 exclude: '^BOSL2/'
 
 repos:
-  - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v19.1.7
+  - repo: local
     hooks:
-      - id: clang-format
-        name: clang-format (OpenSCAD)
+      - id: scadformat
+        name: scadformat
+        entry: bash -c 'for f in "$@"; do scadformat "$f" && rm -f "${f}.scadbak"; done' --
+        language: system
         types: [file]
         types_or: []
         files: '\.scad$'
         exclude: '^BOSL2/'
-        args: [-i]

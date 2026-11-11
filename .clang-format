@@ -11,4 +11,5 @@ AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: false
 SpacesBeforeTrailingComments: 2
 AlignAfterOpenBracket: Align
+SortIncludes: Never
 ...
