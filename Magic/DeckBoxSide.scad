@@ -382,3 +382,48 @@ module top_rounding_corner() {
     }
   }
 }
+
+Section_wall_thickness = Separator_thickness;
+Section_wall_half_thickness = Section_wall_thickness / 2;
+Section_wall_height = Box_height;
+
+module wall_with_curve(thickness, length) {
+  intersection() {
+    cuboid([length, thickness, Section_wall_height], anchor = BOTTOM + BACK);
+    union() {
+      cuboid([length, thickness, Section_wall_height - Top_rounding_size], anchor = BOTTOM + BACK);
+      up(Section_wall_height - Top_rounding_size)
+        yrot(90)
+          back(Top_rounding_radius - thickness)
+            cylinder(r = Top_rounding_radius, h = length, center = true);
+    }
+  }
+}
+
+module section_cards(section_length) {
+  with_grab_cutout() {
+    // Side box walls
+    yflip_copy()
+      back(Box_width / 2)
+        wall_with_curve(Box_thickness, section_length);
+    // Section front and back half-walls
+    zrot(90)
+      yflip_copy()
+        back(section_length / 2)
+          wall_with_curve(Section_wall_half_thickness, Box_width);
+  }
+}
+
+module with_grab_cutout() {
+  union() {
+    children();
+    grab_cutout();
+  }
+}
+
+right(200)
+  wall_with_curve(2, 100);
+right(400)
+  section_cards(45);
+right(430)
+  section_cards(15);
