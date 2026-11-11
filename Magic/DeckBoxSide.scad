@@ -446,7 +446,21 @@ module section_dice_box(section_length) {
             wall(Section_wall_half_thickness, Box_width_outer);
       // Floor
       cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
-
+      // Side wall with magnets
+      difference() {
+        back(Box_width_outer / 2)
+          wall(Box_thickness, section_length);
+        back(Box_width / 2) {
+          up(25)
+            right(section_length / 5)
+              xrot(-90)
+                magnet_hole();
+          up(25)
+            left(section_length / 5)
+              xrot(-90)
+                magnet_hole();
+        }
+      }
     }
 }
 
@@ -460,6 +474,15 @@ module section_grab_cutout(section_length, shell_offset = 0) {
     }
 }
 
+module magnet_hole() {
+  cyl(r = Magnet_diameter / 2, h = Box_magnet_depth, anchor = BOTTOM);
+}
+
+Dice_box_open_angle = 90;
+
+module dice_box(section_length) {
+}
+
 right(200)
   wall_with_curve(2, 100);
 right(400)
@@ -468,3 +491,7 @@ right(445)
   section_cards(15);
 right(460)
   section_dice_box(30);
+
+fwd(200)
+  right(460)
+    dice_box(30);
