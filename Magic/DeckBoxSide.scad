@@ -25,7 +25,7 @@ Handle_cut_length = 20;
 Hinge_offset = Thickness / 2 + 0.2;
 
 Box_cutout_width = Box_width / 3;
-Box_cutout_depth = Box_height * 1 / 4;
+Box_cutout_depth = Box_height * 0.3;
 Box_cutout_rounding = Box_cutout_depth / 2;
 Box_cutout_offset = Box_width / 6;
 Hinge_segments = 9;
@@ -65,6 +65,8 @@ Hook_diameter = 5.85;
 Hook_depth = 1.85;
 
 Box_front_delta = (Box_front_thickness - Box_thickness) / 2;
+
+Box_clearance = 0.25;
 
 module hinge(inner, in_place = true, length = Box_width_outer) {
   knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
@@ -341,7 +343,7 @@ sideboard_separator();
 
 */
 
-whole_box();
+// whole_box();
 
 module hinge_cap() {
   cylinder(h = 4, r = (Hinge_pin_diam - 0.15) / 2);
@@ -431,6 +433,8 @@ module with_grab_cutout(section_length, shell_offset = 0) {
   }
 }
 
+Dice_box_section_top_compartment = true;
+
 module section_dice_box(section_length, push_hole = true) {
   right(section_length / 2)
     with_grab_cutout(section_length) {
@@ -438,13 +442,23 @@ module section_dice_box(section_length, push_hole = true) {
       difference() {
         intersection() {
           cuboid([section_length, Box_width_outer, Section_wall_height], anchor = BOTTOM);
-          section_grab_cutout(section_length, shell_offset = Box_thickness);
+          section_grab_cutout(section_length, shell_offset = Box_thickness, for_insert = true);
         }
         if (push_hole) {
           up(Box_height)
             fwd(Box_cutout_width / 2 - Box_cutout_offset)
               xrot(-45)
                 cyl(r = section_length / 2 - 2 * Thickness, h = 100);
+        }
+        if (Dice_box_section_top_compartment) {
+          up(Box_height + Box_thickness) {
+            back(Box_cutout_offset + Box_cutout_width / 2 + 2) {
+              cuboid([section_length - Separator_thickness, Box_width / 2 - Box_cutout_offset, Box_cutout_depth], anchor = FRONT + TOP);
+            }
+            back(Box_cutout_offset) {
+              cuboid([16 - Separator_thickness, Box_width / 2 - Box_cutout_offset, Box_cutout_depth], anchor = FRONT + TOP);
+            }
+          }
         }
       }
       // Section front and back half-walls
@@ -485,11 +499,13 @@ module cuboid_with_cutout(length, width, height, d, shell_offset) {
   }
 }
 
-module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset) {
+module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset, extra_fwd = 0) {
   left(length / 2)
     difference() {
       up(d)
-        cuboid([length, width, height - d], anchor = BOTTOM);
+        fwd(extra_fwd / 2) {
+          cuboid([length, width + extra_fwd, height - d], anchor = BOTTOM);
+        }
       section_grab_cutout(length, shell_offset, for_insert = true);
     }
 }
@@ -499,55 +515,76 @@ module magnet_hole() {
 }
 
 Dice_box_open_angle = 90;
+Dice_box_out = 120;
+Dice_box_hinge_length = Box_width + Box_thickness - 2 * Box_clearance;
+
+f = Thickness / 2;
+
+module left_and_up(t) {
+  left(t)
+    up(t)
+      children();
+}
 
 module dice_box(section_length) {
-  up(Thickness / 2)
-    xflip_copy() {
-      right(section_length / 2 - Thickness / 2)
-        yrot(Dice_box_open_angle) {
-          right(Thickness / 2)
-            up(Hinge_offset) {
-              dice_box_half(section_length / 2);
-              left(Thickness / 2)
-                zrot(90)
-                  zflip()
-                    hinge(false, length = Box_width);
-            }
-        }
+  xflip_copy() {
+    right(section_length / 2 - Separator_thickness / 2 - Box_clearance) {
+      left_and_up(f)
+        yrot(Dice_box_open_angle)
+          left_and_up(-f) {
+            dice_box_half(section_length / 2);
+            left(Thickness / 2)
+              zrot(90)
+                zflip()
+                  left(Box_thickness / 2)
+                    down(Thickness / 2 + Hinge_offset)
+                      hinge(false, length = Dice_box_hinge_length);
+          }
     }
+  }
 
   // Connecting bottom wall
-  difference() {
-    cuboid([section_length - 2 * Hinge_offset - Thickness, Box_width, Thickness], anchor = BOTTOM) {
-      position(RIGHT)
-        orient(anchor = RIGHT)
-          xflip()
-            hinge(true, length = Box_width);
-      position(LEFT)
-        orient(anchor = LEFT)
-          hinge(true, length = Box_width);
+  fwd(Box_thickness / 2)
+    difference() {
+      cuboid([section_length - 2 * Hinge_offset - Thickness - Separator_thickness - 2 * Box_clearance, Dice_box_hinge_length, Thickness], anchor = BOTTOM) {
+        position(RIGHT)
+          orient(anchor = RIGHT)
+            xflip()
+              hinge(true, length = Dice_box_hinge_length);
+        position(LEFT)
+          orient(anchor = LEFT)
+            hinge(true, length = Dice_box_hinge_length);
+      }
+      magnet_hole();
+
     }
-
-    magnet_hole();
-
-  }
 }
 
 Dice_box_thickness = 1.2;
+Dice_box_up = Box_thickness + Box_clearance;
+Dice_box_up_inside = Dice_box_up + Thickness / 2 + Hinge_offset;
 
 module dice_box_half(height, inner = false) {
-  difference() {
-    cuboid_with_cutout_for_insert(height - 0.15, Box_width, Box_height, 0, shell_offset = Box_thickness + 0.2);
-    left(Thickness)
-      cuboid_with_cutout_for_insert(height - Dice_box_thickness - 0.15, Box_width - 2 * Dice_box_thickness, Box_height, 0, shell_offset = Dice_box_thickness + Box_thickness + 0.2);
-  }
+  down(Dice_box_up)
+    difference() {
+      cuboid_with_cutout_for_insert(height - 0.15, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness);
+      left(Thickness)
+        cuboid_with_cutout_for_insert(height - Dice_box_thickness - 0.15, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness);
+    }
 }
 
-right(445)
-  section_cards(15);
-right(460)
-  section_dice_box(30);
+right(448)
+  section_cards(12);
+right(460) {
+  union() {
+    section_dice_box(26);
 
-fwd(200)
-  right(460)
-    dice_box(30);
+    fwd(Dice_box_out)
+      right(15)
+        color("green")
+          dice_box(30);
+  }
+}
+right(486) {
+  section_cards(45);
+}
