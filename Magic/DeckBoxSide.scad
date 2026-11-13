@@ -3,42 +3,51 @@ include <BOSL2/hinges.scad>
 
 $fn = 180;
 
+/* [Internal dimensions (mm)] */
 Box_width = 94;
 Box_depth = 56;
-Box_height = 66;
-Flap_length = 44;
-Flap_rounding = 12;
-Flap_magnet_depth = 2.15;
-Box_magnet_depth = 2.15;
+Box_height = 69;
 
-Magnet_diameter = 6.2;
-Magnet_offset = 8;
+/* [Other sizes (mm)] */
+Thickness = 3.25;
 Box_thickness = 2.5;
 Box_front_thickness = 3;
 
+Flap_length = 44;
+Flap_rounding = 12;
+
+Handle_cut_length = 20;
+Opening_handle_depth = 1.5;
+Opening_handle_offset = sqrt(Thickness) - Opening_handle_depth;
+
+/* General parameters */
+Hinge_segments = 9;
+
+/* [Magnets] */
+
+Magnet_diameter = 6.2;
+Magnet_offset = 8;
+Flap_magnet_depth = 2.15;
+Box_magnet_depth = 2.15;
+
+// Use 4 magnet pairs instead 2 to secure the flap to the front plate
+Four_magnets = false;
+
 Box_width_outer = Box_width + 2 * Box_thickness;
 Box_depth_outer = Box_depth + Box_thickness + Box_front_thickness;
-Box_height_outer = Box_height + 2 * Box_thickness;
+Box_height_outer = Box_height + Box_thickness;
 
-Thickness = 3.25;
-Handle_cut_length = 20;
 Hinge_offset = Thickness / 2 + 0.2;
 
 Box_cutout_width = Box_width / 3;
 Box_cutout_depth = Box_height * 0.3;
 Box_cutout_rounding = Box_cutout_depth / 2;
-Box_cutout_offset = Box_width / 6;
-Hinge_segments = 9;
+Box_cutout_offset = Box_width / 8;
 
 Sideboard_separator_offset = 1;
 Close_angle = 0; // [0:90]
 
 Back_side_length = Box_height_outer - Thickness / 2 - Hinge_offset;
-
-Opening_handle_depth = 1.5;
-Opening_handle_offset = sqrt(Thickness) - Opening_handle_depth;
-
-Four_magnets = false;
 
 First_hinge_in_place = true;
 Hinge_pin_diam = 2;
@@ -67,6 +76,17 @@ Hook_depth = 1.85;
 Box_front_delta = (Box_front_thickness - Box_thickness) / 2;
 
 Box_clearance = 0.25;
+
+/* [Dice box] */
+
+Dice_box_thickness = 2;
+Dice_box_up = Box_thickness + Box_clearance;
+Dice_box_up_inside = Dice_box_up + Thickness / 2 + Hinge_offset;
+
+Dice_box_open_angle = 90; // [0:90]
+Dice_box_out = 120; // [0:150]
+Dice_box_hinge_length = Box_width + Box_thickness - 2 * Box_clearance;
+Dice_box_align_z = false;
 
 module hinge(inner, in_place = true, length = Box_width_outer) {
   knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
@@ -198,6 +218,11 @@ module next_segment(prev_length) {
   left(prev_length + 2 * Hinge_offset)
     rotate([0, Close_angle, 0])
       children();
+}
+
+module first_segment() {
+  rotate([0, Close_angle, 0])
+    children();
 }
 
 module grab_cutout(shell_offset = 0) {
@@ -448,7 +473,7 @@ module section_dice_box(section_length, push_hole = true) {
           up(Box_height)
             fwd(Box_cutout_width / 2 - Box_cutout_offset)
               xrot(-45)
-                cyl(r = section_length / 2 - 2 * Thickness, h = 100);
+                cyl(r = section_length / 2 - 2 * Separator_thickness, h = 100);
         }
         if (Dice_box_section_top_compartment) {
           up(Box_height + Box_thickness) {
@@ -514,10 +539,6 @@ module magnet_hole() {
   cyl(r = Magnet_diameter / 2, h = Box_magnet_depth, anchor = BOTTOM);
 }
 
-Dice_box_open_angle = 90;
-Dice_box_out = 120;
-Dice_box_hinge_length = Box_width + Box_thickness - 2 * Box_clearance;
-
 f = Thickness / 2;
 
 module left_and_up(t) {
@@ -526,43 +547,57 @@ module left_and_up(t) {
       children();
 }
 
-module dice_box(section_length) {
-  xflip_copy() {
-    right(section_length / 2 - Separator_thickness / 2 - Box_clearance) {
-      left_and_up(f)
-        yrot(Dice_box_open_angle)
-          left_and_up(-f) {
-            dice_box_half(section_length / 2);
-            left(Thickness / 2)
-              zrot(90)
-                zflip()
-                  left(Box_thickness / 2)
-                    down(Thickness / 2 + Hinge_offset)
-                      hinge(false, length = Dice_box_hinge_length);
-          }
+module dice_box_move(section_length) {
+  right(section_length) {
+    if (Dice_box_align_z) {
+      up(Box_thickness + Box_clearance)
+        children();
+    } else {
+      children();
     }
   }
-
-  // Connecting bottom wall
-  fwd(Box_thickness / 2)
-    difference() {
-      cuboid([section_length - 2 * Hinge_offset - Thickness - Separator_thickness - 2 * Box_clearance, Dice_box_hinge_length, Thickness], anchor = BOTTOM) {
-        position(RIGHT)
-          orient(anchor = RIGHT)
-            xflip()
-              hinge(true, length = Dice_box_hinge_length);
-        position(LEFT)
-          orient(anchor = LEFT)
-            hinge(true, length = Dice_box_hinge_length);
-      }
-      magnet_hole();
-
-    }
 }
 
-Dice_box_thickness = 1.2;
-Dice_box_up = Box_thickness + Box_clearance;
-Dice_box_up_inside = Dice_box_up + Thickness / 2 + Hinge_offset;
+module dice_box(section_length) {
+  dice_box_width_outer = section_length - Separator_thickness - 2 * Box_clearance;
+  dice_box_width_inner = dice_box_width_outer - 2 * Thickness;
+  dice_box_floor_width = dice_box_width_outer - 2 * Hinge_offset - Thickness;
+
+  dice_box_move(section_length / 2) {
+
+    xflip_copy() {
+      right(dice_box_width_outer / 2) {
+        left_and_up(f)
+          yrot(Dice_box_open_angle)
+            left_and_up(-f) {
+              dice_box_half(dice_box_width_outer / 2);
+              left(Thickness / 2)
+                zrot(90)
+                  zflip()
+                    left(Box_thickness / 2)
+                      down(Thickness / 2 + Hinge_offset)
+                        hinge(false, length = Dice_box_hinge_length);
+            }
+      }
+    }
+
+    // Connecting bottom wall
+    fwd(Box_thickness / 2)
+      difference() {
+        cuboid([dice_box_floor_width, Dice_box_hinge_length, Thickness], anchor = BOTTOM) {
+          position(RIGHT)
+            orient(anchor = RIGHT)
+              xflip()
+                hinge(true, length = Dice_box_hinge_length);
+          position(LEFT)
+            orient(anchor = LEFT)
+              hinge(true, length = Dice_box_hinge_length);
+        }
+        magnet_hole();
+
+      }
+  }
+}
 
 module dice_box_half(height, inner = false) {
   down(Dice_box_up)
@@ -573,18 +608,99 @@ module dice_box_half(height, inner = false) {
     }
 }
 
-right(448)
-  section_cards(12);
-right(460) {
-  union() {
-    section_dice_box(26);
+module section_back() {
+  with_grab_cutout(100)
+    cuboid([Box_thickness - Separator_thickness / 2, Box_width_outer, Box_height + Box_thickness], anchor = BOTTOM + RIGHT) {
+      position(BOTTOM + LEFT)
+        orient(LEFT)
+          back(Thickness / 2)
+            hinge(in_place = First_hinge_in_place);
+    }
+}
 
-    fwd(Dice_box_out)
-      right(15)
-        color("green")
-          dice_box(30);
+Front_section_thickness = Box_front_thickness - Separator_thickness / 2;
+
+module section_front() {
+  with_grab_cutout(100)
+    difference() {
+      cuboid([Front_section_thickness, Box_width_outer, Box_height + Box_thickness], anchor = BOTTOM + LEFT);
+      // Opening handle
+      translate([Front_section_thickness, 0, Box_height_outer - Flap_length])
+        hull() {
+          rotate([90, 45, 0])
+            handle_cut();
+          down(12)
+            rotate([90, 45, 0])
+              handle_cut();
+        }
+
+      // Holes for magnets
+      Magnet_holes_offset = Box_magnets_inside ? -Separator_thickness / 2 : Front_section_thickness - Box_magnet_depth;
+
+      right(Magnet_holes_offset)
+        rotate([0, 90, 0])
+          right(-Box_height_outer + Flap_length)
+            rotate([0, 180, 0])
+              magnet_holes(0, Box_magnet_depth, Four_magnets || Closing_hooks);
+    }
+}
+
+module whole_box_in_sections() {
+  union() {
+    right(415)
+      cover();
+    right(415)
+      section_back();
+    right(415)
+      section_cards(45);
+    right(460) {
+      union() {
+        section_dice_box(26);
+
+        fwd(Dice_box_out)
+          color("green")
+            dice_box(26);
+      }
+    }
+    right(486) {
+      section_cards(12);
+    }
+    right(498)
+      section_front();
   }
 }
-right(486) {
-  section_cards(45);
+
+Section_box_depth_outer = Box_thickness + 45 + 26 + 12 + Box_front_thickness - Separator_thickness;
+
+module cover() {
+  up(Thickness / 2)
+    left(Box_thickness - Separator_thickness / 2 + Hinge_offset)
+      first_segment() {
+        difference() {
+          side(Back_side_length, start_in_place = First_hinge_in_place);
+          left(Box_width_outer / 2)
+            up(Thickness / 2 - Flap_magnet_depth)
+              magnet_hole();
+        }
+        next_segment(Back_side_length) {
+          difference() {
+            side(Section_box_depth_outer);
+            left(Section_box_depth_outer / 2)
+              up(Thickness / 2 - Flap_magnet_depth)
+                magnet_hole();
+          }
+          next_segment(Section_box_depth_outer) {
+            flap();
+          }
+        }
+      }
+}
+
+Right_handed = true;
+
+if (Right_handed) {
+  yflip()
+    whole_box_in_sections();
+} else {
+  whole_box_in_sections();
 }
