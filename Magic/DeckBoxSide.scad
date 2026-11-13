@@ -29,8 +29,8 @@ Box_clearance = 0.25;
 
 /* [Hinges] */
 Hinge_segments = 9;
-// Use if the box doesn't fit on the build plate in one piece
-First_hinge_in_place = true;
+// Set to false if the box doesn't fit on the build plate in one piece
+First_hinge_in_place = false;
 Hinge_pin_diam = 2;
 
 /* [Magnets] */
@@ -53,7 +53,7 @@ Box_height_outer = Box_height + Box_thickness;
 Hinge_offset = Thickness / 2 + 0.2;
 
 Box_cutout_width = 36;
-Box_cutout_depth = 23;
+Box_cutout_depth = 24;
 Box_cutout_rounding = 10;
 Box_cutout_offset = 10;
 
