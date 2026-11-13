@@ -12,6 +12,7 @@ Box_height = 69;
 Thickness = 3.25;
 Box_thickness = 2.5;
 Box_front_thickness = 3;
+Separator_thickness = 2;
 
 Flap_length = 44;
 Flap_rounding = 12;
@@ -20,8 +21,16 @@ Handle_cut_length = 20;
 Opening_handle_depth = 1.5;
 Opening_handle_offset = sqrt(Thickness) - Opening_handle_depth;
 
-/* General parameters */
+Top_rounding_size = 8;
+Top_rounding_radius = 40;
+
+Box_clearance = 0.25;
+
+/* [Hinges] */
 Hinge_segments = 9;
+// Use if the box doesn't fit on the build plate in one piece
+First_hinge_in_place = true;
+Hinge_pin_diam = 2;
 
 /* [Magnets] */
 
@@ -45,21 +54,16 @@ Box_cutout_rounding = Box_cutout_depth / 2;
 Box_cutout_offset = Box_width / 8;
 
 Sideboard_separator_offset = 1;
+
+/* [Display] */
 Close_angle = 0; // [0:90]
 
 Back_side_length = Box_height_outer - Thickness / 2 - Hinge_offset;
 
-First_hinge_in_place = true;
-Hinge_pin_diam = 2;
-
-Separator_thickness = 2;
 Separator_1 = 42;
 Separator_2 = 0;
 Separator_3 = 0;
 Separator_4 = 0;
-
-Top_rounding_size = 8;
-Top_rounding_radius = 40;
 
 Separators = [Separator_1, Separator_2, Separator_3, Separator_4];
 
@@ -74,8 +78,6 @@ Hook_diameter = 5.85;
 Hook_depth = 1.85;
 
 Box_front_delta = (Box_front_thickness - Box_thickness) / 2;
-
-Box_clearance = 0.25;
 
 /* [Dice box] */
 
