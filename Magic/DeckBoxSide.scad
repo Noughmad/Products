@@ -52,12 +52,17 @@ Box_height_outer = Box_height + Box_thickness;
 
 Hinge_offset = Thickness / 2 + 0.2;
 
+Sideboard_separator_offset = 1;
+
+/* [Cutout for grabbing cards] */
+
 Box_cutout_width = 36;
 Box_cutout_depth = 24;
 Box_cutout_rounding = 10;
 Box_cutout_offset = 10;
 
-Sideboard_separator_offset = 1;
+Box_cutout_angled_ceiling = 8;
+
 
 /* [Display] */
 Close_angle = 0; // [0:90]
@@ -493,6 +498,7 @@ module dice_box_magnets() {
 }
 
 module section_dice_box(section_length, push_hole = true) {
+
   right(section_length / 2)
     with_grab_cutout(section_length) {
       // Top wall
@@ -501,6 +507,13 @@ module section_dice_box(section_length, push_hole = true) {
           intersection() {
             cuboid([section_length, Box_width_outer, Section_wall_height], anchor = BOTTOM);
             section_grab_cutout(section_length, shell_offset = Box_thickness, for_insert = true);
+          }
+
+          // Angled ceiling to avoid supports
+          if (Box_cutout_angled_ceiling > 0) {
+            up(Box_height_outer - Box_cutout_depth - Box_thickness) {
+              angled_ceiling(section_length, Box_width / 2, Box_cutout_angled_ceiling);
+            }
           }
 
           // Section front and back half-walls
@@ -535,15 +548,15 @@ module section_dice_box(section_length, push_hole = true) {
     }
 }
 
-module section_grab_cutout(section_length, shell_offset = 0, for_insert = false) {
+module section_grab_cutout(section_length, shell_offset = 0, for_insert = false, extra_cutout_depth = 0) {
   up(Section_wall_height - shell_offset)
     back(Box_cutout_offset) {
-      cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_depth], rounding = Box_cutout_rounding + shell_offset, edges = [BOTTOM + FRONT, BOTTOM + BACK], anchor = TOP);
+      cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_depth + extra_cutout_depth], rounding = Box_cutout_rounding + shell_offset, edges = [BOTTOM + FRONT, BOTTOM + BACK], anchor = TOP);
       cuboid([section_length, Box_cutout_width + 2 * shell_offset, Box_cutout_rounding - shell_offset], rounding = -Box_cutout_rounding + shell_offset, edges = [TOP + FRONT, TOP + BACK], anchor = TOP);
       fwd(Box_cutout_offset)
         cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
       if (for_insert) {
-        cuboid([section_length, Box_width_outer / 2, Box_cutout_depth], anchor = TOP + FRONT);
+        cuboid([section_length, Box_width_outer / 2, Box_cutout_depth + extra_cutout_depth], anchor = TOP + FRONT);
       }
     }
 }
@@ -555,14 +568,14 @@ module cuboid_with_cutout(length, width, height, d, shell_offset) {
   }
 }
 
-module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset, extra_fwd = 0) {
+module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset, extra_fwd = 0, extra_cutout_depth = 0) {
   left(length / 2)
     difference() {
       up(d)
         fwd(extra_fwd / 2) {
           cuboid([length, width + extra_fwd, height - d], anchor = BOTTOM);
         }
-      section_grab_cutout(length, shell_offset, for_insert = true);
+      section_grab_cutout(length, shell_offset, for_insert = true, extra_cutout_depth = extra_cutout_depth);
     }
 }
 
@@ -646,14 +659,14 @@ module die() {
 module dice_box_half(height, inner = false, organizer = false) {
   down(Dice_box_up) {
     difference() {
-      cuboid_with_cutout_for_insert(height - 0.15, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness);
+      cuboid_with_cutout_for_insert(height - 0.15, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
       left(Thickness)
-        cuboid_with_cutout_for_insert(height - Dice_box_thickness - 0.15, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness);
+        cuboid_with_cutout_for_insert(height - Dice_box_thickness - 0.15, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
     }
 
     if (organizer) {
       intersection() {
-        cuboid_with_cutout_for_insert(height - 0.15, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness);
+        cuboid_with_cutout_for_insert(height - 0.15, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
 
         up(Dice_box_up)
           union() {
@@ -800,13 +813,14 @@ module dice_cut(section_length) {
 
 Right_handed = true;
 
-
+/*
 if (Right_handed) {
   yflip()
     whole_box_in_sections();
 } else {
   whole_box_in_sections();
 }
+*/
 
 
 /*
@@ -883,3 +897,24 @@ if (Include_dice_tray) {
       dice_tray_drawer();
   }
 }
+
+Angled_ceiling_bridging = 0;
+
+module angled_ceiling(length, width, height) {
+  echo("Ceiling angle", atan2(height, ((length - Angled_ceiling_bridging) / 2)));
+  difference() {
+    union() {
+      cuboid([length, width, height], anchor = TOP + FRONT);
+      cuboid([length, width, Box_thickness - 0.01], anchor = BOTTOM + FRONT);
+    }
+    prismoid([length, width * 2], [Angled_ceiling_bridging + 0.01, width * 2 - length + Angled_ceiling_bridging], h = height, anchor = TOP);
+    prismoid([length, length], [length, 0.01], h = height, anchor = TOP);
+  }
+}
+
+// angled_ceiling(26, Box_width/2, 8);
+
+right(100)
+  section_dice_box(26);
+
+dice_box(26);
