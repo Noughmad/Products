@@ -934,6 +934,10 @@ module dice_tray_drawer() {
                     fwd(Box_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - Box_clearance)
                       cuboid([5, Dice_tray_wall_thickness, 5]);
       }
+
+// TODO: Add a sunk handle for the drawer
+
+// TODO: Add a magnet in the back to hold the drawer shut
 }
 
 if (Include_dice_tray) {
