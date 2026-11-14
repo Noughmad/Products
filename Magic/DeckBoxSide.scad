@@ -103,6 +103,19 @@ Dice_box_organized_d6_size = 16;
 Dice_box_organizer_clearance = 0;
 Dice_box_organizer_display_dice = true;
 
+/* [Box Sections] */
+Sections = "cards:12, dice:26, cards:42";
+
+Sections_list = str_split(Sections, " ;,", keep_nulls = false);
+
+echo(Sections_list);
+
+/* [Dice tray under the cards] */
+Include_dice_tray = true;
+Dice_tray_height = 30;
+Dice_tray_drawer_out = 120; // [0:150]
+Dice_tray_drawer_stopper = true;
+
 module hinge(inner, in_place = true, length = Box_width_outer) {
   knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
 }
@@ -804,3 +817,65 @@ back_half(s=500, y=20) {
 */
 
 // dice_cut();
+
+Dice_tray_corner_chamfer = 0;
+Dice_tray_wall_thickness = 6;
+Dice_tray_stopper = true;
+Dice_tray_depth = Section_box_depth_outer - 2 * Dice_tray_wall_thickness;
+Dice_tray_opening_width = Dice_tray_depth - 2 * Dice_tray_corner_chamfer;
+
+module dice_tray_frame() {
+  // Floor and walls
+  difference() {
+    cuboid([Section_box_depth_outer, Box_width_outer, Dice_tray_height], anchor = BOTTOM);
+    up(Box_thickness)
+      cuboid([Dice_tray_depth, Box_width_outer - 2 * Dice_tray_wall_thickness, Dice_tray_height], anchor = BOTTOM, chamfer = Dice_tray_corner_chamfer, edges = "Z");
+    up(Box_thickness)
+      back(Box_width / 2)
+        cuboid([Dice_tray_opening_width, Box_width, Dice_tray_height], anchor = BOTTOM);
+
+    // Line for the stopper
+    // It needs to be open upwards, so we can place the drawer in
+    up(Dice_tray_height)
+      back()
+        xflip_copy() {
+          left(Section_box_depth_outer / 2 - Dice_tray_wall_thickness)
+            yrot(45)
+              cuboid([5, Box_width_outer - 2 * Dice_tray_wall_thickness, 5]);
+        }
+  }
+}
+
+Dice_tray_drawer_width = Dice_tray_opening_width - 2 * Box_clearance;
+
+module dice_tray_drawer() {
+  up(Box_thickness + Box_clearance) {
+    difference() {
+      back(Dice_tray_wall_thickness / 2 + Box_clearance / 2)
+        cuboid([Dice_tray_drawer_width, Box_width_outer - Dice_tray_wall_thickness - 2 * Box_clearance, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
+      back(Dice_tray_wall_thickness / 2 + Box_clearance / 2)
+        up(Dice_box_thickness)
+          cuboid([Dice_tray_drawer_width - 2 * Dice_box_thickness, Box_width_outer - Dice_tray_wall_thickness - Box_clearance - 2 * Dice_box_thickness, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
+    }
+  }
+
+  // Stopper
+  up(Dice_tray_height - Box_clearance)
+    back()
+      xflip_copy() {
+        left(Section_box_depth_outer / 2 - Dice_tray_wall_thickness - Box_clearance)
+          bottom_half()
+            left_half()
+              yrot(45)
+                fwd(Box_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - Box_clearance)
+                  cuboid([5, Dice_tray_wall_thickness, 5]);
+      }
+}
+
+if (Include_dice_tray) {
+  right(446 + 2 * Section_box_depth_outer) {
+    dice_tray_frame();
+    back(Dice_tray_drawer_out)
+      dice_tray_drawer();
+  }
+}
