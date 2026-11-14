@@ -109,9 +109,35 @@ Dice_box_organizer_clearance = 0;
 Dice_box_organizer_display_dice = true;
 
 /* [Box Sections] */
-Sections = "cards:12, dice:26, cards:42";
+Sections = "12:cards, 26:dice, 42:cards";
 
 Sections_list = str_split(Sections, " ;,", keep_nulls = false);
+Num_sections = len(Sections_list);
+
+echo(Sections_list);
+echo(Sections_list[0]);
+echo(str_split(Sections_list[0], ":"));
+
+Sections_sizes = [
+  for (i = [0:Num_sections - 1])
+    parse_float(str_split(Sections_list[i], ":")[0])
+];
+Sections_types = [
+  for (i = [0:Num_sections - 1])
+    str_split(Sections_list[i], ":")[1]
+];
+
+echo(Sections_sizes);
+echo(Sections_types);
+
+function cumulative_section_pos(n) =
+  sum([
+    for (i = [0:n - 1])
+      Sections_sizes[i]
+  ]);
+
+function section_size(i) =
+  parse_float(str_split(Sections_list[i], ":")[1]);
 
 echo(Sections_list);
 
@@ -813,24 +839,16 @@ module dice_cut(section_length) {
 
 Right_handed = true;
 
-/*
-if (Right_handed) {
-  yflip()
-    whole_box_in_sections();
-} else {
-  whole_box_in_sections();
+module maybe_right_handed() {
+  if (Right_handed) {
+    yflip()
+      children();
+  } else {
+    children();
+  }
 }
-*/
 
-
-/*
-back_half(s=500, y=20) {
-    top_half(z=43)
-    section_dice_box(26);    
-}
-*/
-
-// dice_cut();
+// maybe_right_handed() whole_box_in_sections();
 
 Dice_tray_corner_chamfer = 0;
 Dice_tray_wall_thickness = 6;
@@ -914,7 +932,42 @@ module angled_ceiling(length, width, height) {
 
 // angled_ceiling(26, Box_width/2, 8);
 
+/*
 right(100)
   section_dice_box(26);
 
 dice_box(26);
+*/
+
+module dynamic_section(i) {
+  type = Sections_types[i];
+  length = Sections_sizes[i];
+  if (type == "cards") {
+    section_cards(length);
+  } else if (type == "dice") {
+    section_dice_box(length);
+  } else {
+    echo("unknown section", type);
+  }
+}
+
+module box_sections_dynamic() {
+  xflip()
+    section_front();
+
+
+  for(i = [0:Num_sections - 1]) {
+    right(cumulative_section_pos(i))
+      dynamic_section(i);
+  }
+
+  right(cumulative_section_pos(Num_sections))
+    xflip() {
+      section_back();
+      cover();
+    }
+}
+
+maybe_right_handed()
+  yflip()
+    box_sections_dynamic();
