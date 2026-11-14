@@ -6,7 +6,6 @@ $fn = 180;
 
 /* [Internal dimensions (mm)] */
 Box_width = 94;
-Box_depth = 56;
 Box_height = 72;
 
 /* [Other sizes (mm)] */
@@ -47,7 +46,6 @@ Dice_box_magnet_distance = 30;
 Four_magnets = false;
 
 Box_width_outer = Box_width + 2 * Box_thickness;
-Box_depth_outer = Box_depth + Box_thickness + Box_front_thickness;
 Box_height_outer = Box_height + Box_thickness;
 
 Hinge_offset = Thickness / 2 + 0.2;
@@ -127,6 +125,7 @@ Sections_types = [
     str_split(Sections_list[i], ":")[1]
 ];
 
+
 echo(Sections_sizes);
 echo(Sections_types);
 
@@ -141,11 +140,17 @@ function section_size(i) =
 
 echo(Sections_list);
 
+Box_depth = cumulative_section_pos(Num_sections);
+Box_depth_outer = Box_depth + Box_thickness + Box_front_thickness;
+
 /* [Dice tray under the cards] */
 Include_dice_tray = true;
 Dice_tray_height = 30;
 Dice_tray_drawer_out = 120; // [0:150]
 Dice_tray_drawer_stopper = true;
+
+Dice_tray_attach_magnets = true;
+Dice_tray_attach_pins = true;
 
 module hinge(inner, in_place = true, length = Box_width_outer) {
   knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
@@ -771,7 +776,7 @@ module whole_box_in_sections() {
   }
 }
 
-Section_box_depth_outer = Box_thickness + 14 + 26 + 44 + Box_front_thickness - Separator_thickness;
+Section_box_depth_outer = Box_depth + Box_thickness + Box_front_thickness - Separator_thickness;
 
 module cover() {
   up(Thickness / 2)
@@ -851,10 +856,11 @@ module maybe_right_handed() {
 // maybe_right_handed() whole_box_in_sections();
 
 Dice_tray_corner_chamfer = 0;
-Dice_tray_wall_thickness = 6;
+Dice_tray_wall_thickness = 4;
 Dice_tray_stopper = true;
 Dice_tray_depth = Section_box_depth_outer - 2 * Dice_tray_wall_thickness;
 Dice_tray_opening_width = Dice_tray_depth - 2 * Dice_tray_corner_chamfer;
+Dice_tray_cover_thickness = 2.5;
 
 module dice_tray_frame() {
   // Floor and walls
@@ -875,10 +881,32 @@ module dice_tray_frame() {
             hull()
               zcopies(10)
                 yrot(45)
-                  cuboid([5, Box_width_outer - 2 * Dice_tray_wall_thickness, 5]);
+                  cuboid([Dice_tray_wall_thickness / sqrt(2), Box_width_outer - 2 * Dice_tray_wall_thickness, Dice_tray_wall_thickness / sqrt(2)]);
         }
   }
+
+  if (Dice_tray_cover_thickness > 0) {
+    up(Dice_tray_height)
+      difference() {
+        cuboid([Section_box_depth_outer, Box_width_outer, Dice_tray_cover_thickness], anchor = BOTTOM);
+        back(Box_width_outer / 2 + 0.01)
+          cuboid([Section_box_depth_outer - 2 * Dice_tray_wall_thickness, Dice_tray_wall_thickness + 0.02, Dice_tray_cover_thickness + 0.01], anchor = BOTTOM + BACK);
+        back(Box_width_outer / 2 - Dice_tray_wall_thickness + 0.01)
+          cuboid([Section_box_depth_outer - Dice_tray_wall_thickness, Dice_tray_wall_thickness + 2 * Box_clearance, Dice_tray_cover_thickness + 0.01], anchor = BOTTOM + BACK);
+        up(Dice_tray_cover_thickness - Box_magnet_depth)
+          dice_tray_connector_pos()
+            magnet_hole();
+      }
+  }
+
+  if (Dice_tray_attach_pins) {
+    dice_tray_post();
+    up(Dice_tray_height + Dice_tray_cover_thickness)
+      dice_tray_post();
+  }
+
 }
+
 
 Dice_tray_drawer_width = Dice_tray_opening_width - 2 * Box_clearance;
 
@@ -970,4 +998,34 @@ module box_sections_dynamic() {
 
 maybe_right_handed()
   yflip()
-    box_sections_dynamic();
+    difference() {
+      box_sections_dynamic();
+      if (Dice_tray_attach_magnets) {
+        right(Box_depth / 2)
+          dice_tray_connector_pos()
+            magnet_hole();
+      }
+      if (Dice_tray_attach_pins) {
+        right(Box_depth / 2)
+          dice_tray_post(clearance = 0.2);
+      }
+
+    }
+
+module dice_tray_connector_pos() {
+  xcopies(Section_box_depth_outer - 8 * Dice_tray_wall_thickness)
+    ycopies(Box_width_outer - 8 * Dice_tray_wall_thickness)
+      children();
+}
+
+Dice_tray_post_size = 9;
+Dice_tray_post_distance = 16;
+
+module dice_tray_post(thickness = 1.5, clearance = 0) {
+  s = Dice_tray_post_size + 2 * clearance;
+  c = thickness / 4;
+  xcopies(Dice_tray_post_distance)
+    ycopies(Dice_tray_post_distance * 2 / 3, n = 3) {
+      cyl(r = s / 2, h = thickness + clearance, anchor = BOTTOM, chamfer1 = -c - clearance, chamfer2 = clearance == 0 ? 0 : c);
+    }
+}
