@@ -152,6 +152,13 @@ Dice_tray_drawer_stopper = true;
 Dice_tray_attach_magnets = true;
 Dice_tray_attach_pins = true;
 
+Dice_tray_wall_thickness = 4;
+Dice_tray_stopper = true;
+Dice_tray_cover_thickness = 2.5;
+
+Dice_tray_open_front = false;
+
+
 module hinge(inner, in_place = true, length = Box_width_outer) {
   knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
 }
@@ -855,47 +862,48 @@ module maybe_right_handed() {
 
 // maybe_right_handed() whole_box_in_sections();
 
-Dice_tray_corner_chamfer = 0;
-Dice_tray_wall_thickness = 4;
-Dice_tray_stopper = true;
-Dice_tray_depth = Section_box_depth_outer - 2 * Dice_tray_wall_thickness;
-Dice_tray_opening_width = Dice_tray_depth - 2 * Dice_tray_corner_chamfer;
-Dice_tray_cover_thickness = 2.5;
+Tray_length_outer = Dice_tray_open_front ? Box_width_outer : Section_box_depth_outer;
+Tray_width_outer = Dice_tray_open_front ? Section_box_depth_outer : Box_width_outer;
+Tray_length = Tray_length_outer - 2 * Dice_tray_wall_thickness;
+Tray_width = Tray_width_outer - 2 * Dice_tray_wall_thickness;
+Dice_tray_depth = Tray_length_outer - 2 * Dice_tray_wall_thickness;
+Dice_tray_opening_width = Dice_tray_depth;
 
 module dice_tray_frame() {
   // Floor and walls
   difference() {
-    cuboid([Section_box_depth_outer, Box_width_outer, Dice_tray_height], anchor = BOTTOM);
+    cuboid([Tray_length_outer, Tray_width_outer, Dice_tray_height], anchor = BOTTOM);
     up(Box_thickness)
-      cuboid([Dice_tray_depth, Box_width_outer - 2 * Dice_tray_wall_thickness, Dice_tray_height], anchor = BOTTOM, chamfer = Dice_tray_corner_chamfer, edges = "Z");
+      cuboid([Dice_tray_depth, Tray_width_outer - 2 * Dice_tray_wall_thickness, Dice_tray_height], anchor = BOTTOM, edges = "Z");
     up(Box_thickness)
       back(Box_width / 2)
-        cuboid([Dice_tray_opening_width, Box_width, Dice_tray_height], anchor = BOTTOM);
+        cuboid([Dice_tray_opening_width, Tray_width, Dice_tray_height], anchor = BOTTOM);
 
     // Line for the stopper
     // It needs to be open upwards, so we can place the drawer in
     up(Dice_tray_height)
       back()
         xflip_copy() {
-          left(Section_box_depth_outer / 2 - Dice_tray_wall_thickness)
+          left(Tray_length_outer / 2 - Dice_tray_wall_thickness)
             hull()
               zcopies(10)
                 yrot(45)
-                  cuboid([Dice_tray_wall_thickness / sqrt(2), Box_width_outer - 2 * Dice_tray_wall_thickness, Dice_tray_wall_thickness / sqrt(2)]);
+                  cuboid([Dice_tray_wall_thickness / sqrt(2), Tray_width_outer - 2 * Dice_tray_wall_thickness, Dice_tray_wall_thickness / sqrt(2)]);
         }
   }
 
   if (Dice_tray_cover_thickness > 0) {
     up(Dice_tray_height)
       difference() {
-        cuboid([Section_box_depth_outer, Box_width_outer, Dice_tray_cover_thickness], anchor = BOTTOM);
-        back(Box_width_outer / 2 + 0.01)
-          cuboid([Section_box_depth_outer - 2 * Dice_tray_wall_thickness, Dice_tray_wall_thickness + 0.02, Dice_tray_cover_thickness + 0.01], anchor = BOTTOM + BACK);
-        back(Box_width_outer / 2 - Dice_tray_wall_thickness + 0.01)
-          cuboid([Section_box_depth_outer - Dice_tray_wall_thickness, Dice_tray_wall_thickness + 2 * Box_clearance, Dice_tray_cover_thickness + 0.01], anchor = BOTTOM + BACK);
+        cuboid([Tray_length_outer, Tray_width_outer, Dice_tray_cover_thickness], anchor = BOTTOM);
+        back(Tray_width_outer / 2 + 0.01)
+          cuboid([Tray_length_outer - 2 * Dice_tray_wall_thickness, Dice_tray_wall_thickness + 0.02, Dice_tray_cover_thickness + 0.01], anchor = BOTTOM + BACK);
+        back(Tray_width_outer / 2 - Dice_tray_wall_thickness + 0.01)
+          cuboid([Tray_length_outer - Dice_tray_wall_thickness, Dice_tray_wall_thickness + 2 * Box_clearance, Dice_tray_cover_thickness + 0.01], anchor = BOTTOM + BACK);
         up(Dice_tray_cover_thickness - Box_magnet_depth)
-          dice_tray_connector_pos()
-            magnet_hole();
+          zrot(Dice_tray_open_front ? 90 : 0)
+            dice_tray_connector_pos()
+              magnet_hole();
       }
   }
 
@@ -914,10 +922,10 @@ module dice_tray_drawer() {
   up(Box_thickness + Box_clearance) {
     difference() {
       back(Dice_tray_wall_thickness / 2 + Box_clearance / 2)
-        cuboid([Dice_tray_drawer_width, Box_width_outer - Dice_tray_wall_thickness - 2 * Box_clearance, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
+        cuboid([Dice_tray_drawer_width, Tray_width_outer - Dice_tray_wall_thickness - 2 * Box_clearance, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
       back(Dice_tray_wall_thickness / 2 + Box_clearance / 2)
         up(Dice_box_thickness)
-          cuboid([Dice_tray_drawer_width - 2 * Dice_box_thickness, Box_width_outer - Dice_tray_wall_thickness - Box_clearance - 2 * Dice_box_thickness, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
+          cuboid([Dice_tray_drawer_width - 2 * Dice_box_thickness, Tray_width_outer - Dice_tray_wall_thickness - Box_clearance - 2 * Dice_box_thickness, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
     }
   }
 
@@ -925,13 +933,13 @@ module dice_tray_drawer() {
   up(Dice_tray_height - Box_clearance)
     back()
       xflip_copy() {
-        left(Section_box_depth_outer / 2 - Dice_tray_wall_thickness - Box_clearance)
+        left(Tray_length_outer / 2 - Dice_tray_wall_thickness - Box_clearance)
           bottom_half()
             left_half()
               hull()
                 zcopies(10)
                   yrot(45)
-                    fwd(Box_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - Box_clearance)
+                    fwd(Tray_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - Box_clearance)
                       cuboid([5, Dice_tray_wall_thickness, 5]);
       }
 
