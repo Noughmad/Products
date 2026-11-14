@@ -1018,14 +1018,28 @@ module dice_tray_connector_pos() {
       children();
 }
 
-Dice_tray_post_size = 9;
-Dice_tray_post_distance = 16;
+Dice_tray_post_size = 8;
+Dice_tray_post_distance = 18;
 
 module dice_tray_post(thickness = 1.5, clearance = 0) {
   s = Dice_tray_post_size + 2 * clearance;
   c = thickness / 4;
-  xcopies(Dice_tray_post_distance)
-    ycopies(Dice_tray_post_distance * 2 / 3, n = 3) {
-      cyl(r = s / 2, h = thickness + clearance, anchor = BOTTOM, chamfer1 = -c - clearance, chamfer2 = clearance == 0 ? 0 : c);
-    }
+  dice_tray_post_pos(5)
+    cyl(r = s / 2, h = thickness + clearance, anchor = BOTTOM, chamfer1 = -c - clearance, chamfer2 = clearance == 0 ? 0 : c);
+}
+
+module dice_tray_post_pos(n) {
+  if (n == 6) {
+    xcopies(Dice_tray_post_distance)
+      ycopies(Dice_tray_post_distance * 2 / 3, n = 3)
+        children();
+  }
+  if (n == 5 || n == 4) {
+    xcopies(Dice_tray_post_distance)
+      ycopies(Dice_tray_post_distance)
+        children();
+  }
+  if (n == 5 || n == 3 || n == 1) {
+    children();
+  }
 }
