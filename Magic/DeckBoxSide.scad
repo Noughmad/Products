@@ -840,8 +840,10 @@ module dice_tray_frame() {
       back()
         xflip_copy() {
           left(Section_box_depth_outer / 2 - Dice_tray_wall_thickness)
-            yrot(45)
-              cuboid([5, Box_width_outer - 2 * Dice_tray_wall_thickness, 5]);
+            hull()
+              zcopies(10)
+                yrot(45)
+                  cuboid([5, Box_width_outer - 2 * Dice_tray_wall_thickness, 5]);
         }
   }
 }
@@ -866,9 +868,11 @@ module dice_tray_drawer() {
         left(Section_box_depth_outer / 2 - Dice_tray_wall_thickness - Box_clearance)
           bottom_half()
             left_half()
-              yrot(45)
-                fwd(Box_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - Box_clearance)
-                  cuboid([5, Dice_tray_wall_thickness, 5]);
+              hull()
+                zcopies(10)
+                  yrot(45)
+                    fwd(Box_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - Box_clearance)
+                      cuboid([5, Dice_tray_wall_thickness, 5]);
       }
 }
 
