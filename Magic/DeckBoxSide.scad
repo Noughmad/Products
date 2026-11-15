@@ -6,7 +6,7 @@ $fn = 180;
 
 /* [Internal dimensions (mm)] */
 Box_width = 94;
-Box_height = 72;
+Box_height = 73;
 
 /* [Other sizes (mm)] */
 Thickness = 3.25;
@@ -697,14 +697,14 @@ module die() {
 module dice_box_half(height, inner = false, organizer = false) {
   down(Dice_box_up) {
     difference() {
-      cuboid_with_cutout_for_insert(height - 0.15, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
+      cuboid_with_cutout_for_insert(height - 2 * Box_clearance, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
       left(Thickness)
-        cuboid_with_cutout_for_insert(height - Dice_box_thickness - 0.15, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
+        cuboid_with_cutout_for_insert(height - Dice_box_thickness - 2 * Box_clearance, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
     }
 
     if (organizer) {
       intersection() {
-        cuboid_with_cutout_for_insert(height - 0.15, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
+        cuboid_with_cutout_for_insert(height - 2 * Box_clearance, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
 
         up(Dice_box_up)
           union() {
@@ -986,6 +986,9 @@ module dynamic_section(i) {
     section_cards(length);
   } else if (type == "dice") {
     section_dice_box(length);
+
+    fwd(Dice_box_out)
+      dice_box(length);
   } else {
     echo("unknown section", type);
   }
@@ -1054,4 +1057,12 @@ module dice_tray_post_pos(n) {
   if (n == 5 || n == 3 || n == 1) {
     children();
   }
+}
+
+right(320) {
+  section_dice_box(26);
+
+  fwd(Dice_box_out)
+    dice_box(26);
+
 }
