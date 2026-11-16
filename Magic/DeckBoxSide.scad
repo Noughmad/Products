@@ -101,7 +101,7 @@ Dice_box_section_top_compartment = true;
 Dice_cut_shape = "d20"; // ["full", "d20", "d6", "none"]
 Dice_cut_size = 22;
 Dice_cut_outside = true;
-Dice_box_organized_12d6 = true;
+Dice_box_organized = "left"; // ["none", "left", "right", "both"]
 Dice_box_organized_d6_size = 16;
 Dice_box_organizer_clearance = 0;
 Dice_box_organizer_display_dice = true;
@@ -640,6 +640,9 @@ module dice_box_move(section_length) {
   }
 }
 
+function dice_box_organized_side(i) =
+  (Dice_box_organized == "none") ? false : (Dice_box_organized == "both") ? true : (Dice_box_organized == "left") ? i == 1 : i == 0;
+
 module dice_box(section_length) {
   dice_box_width_outer = section_length - Separator_thickness - 2 * Box_clearance;
   dice_box_width_inner = dice_box_width_outer - 2 * Thickness;
@@ -652,7 +655,7 @@ module dice_box(section_length) {
         left_and_up(f)
           yrot(Dice_box_open_angle)
             left_and_up(-f) {
-              dice_box_half(dice_box_width_outer / 2, organizer = Dice_box_organized_12d6 && $idx == 0);
+              dice_box_half(dice_box_width_outer / 2, organizer = dice_box_organized_side($idx));
               left(Thickness / 2)
                 zrot(90)
                   zflip()
