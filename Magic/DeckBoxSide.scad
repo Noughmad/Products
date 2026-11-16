@@ -993,6 +993,11 @@ module dice_tray_drawer() {
         up(Dice_tray_height / 2 - Box_thickness - Box_clearance)
           xrot(-90)
             magnet_hole();
+      // Hole for the sunk handle
+      back(Tray_width_outer / 2)
+        up(Dice_tray_height / 2 - (Box_thickness + Box_clearance) / 2)
+          back(5)
+            cuboid([50, 22, 22], rounding = 11);
     }
   }
 
@@ -1007,9 +1012,25 @@ module dice_tray_drawer() {
                 dice_tray_stopper(Dice_tray_wall_thickness);
       }
 
-// TODO: Add a sunk handle for the drawer
+  // A sunk handle for the drawer
+  back(Tray_width_outer / 2 - Box_clearance)
+    up(Dice_tray_height / 2 + (Box_thickness + Box_clearance) / 2) {
+      difference() {
+        front_half()
+          back(5)
+            cuboid([54, 26, 26], rounding = 11);
+        back(5)
+          cuboid([50, 22, 22], rounding = 11);
+      }
 
-// TODO: Add a magnet in the back to hold the drawer shut
+      front_half() {
+        back(5)
+          cuboid([2, 26.1, 26.1], rounding = 11, edges = "X");
+        back(5)
+          cuboid([6, 12, Dice_tray_height - 2 * Dice_tray_wall_thickness]);
+      }
+    }
+
 }
 
 if (Include_dice_tray) {

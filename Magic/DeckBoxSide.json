@@ -370,7 +370,7 @@
             "Dice_tray_attach_magnets": "true",
             "Dice_tray_attach_pins": "true",
             "Dice_tray_cover_thickness": "3",
-            "Dice_tray_drawer_out": "0",
+            "Dice_tray_drawer_out": "120",
             "Dice_tray_drawer_stopper": "true",
             "Dice_tray_height": "30",
             "Dice_tray_open_front": "false",
