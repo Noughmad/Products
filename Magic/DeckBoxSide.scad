@@ -41,6 +41,7 @@ Box_magnet_depth = 2.15;
 
 Dice_box_magnet_count = 2;
 Dice_box_magnet_distance = 30;
+Dice_box_magnets_on_cover = false;
 
 // Use 4 magnet pairs instead 2 to secure the flap to the front plate
 Four_magnets = false;
@@ -66,6 +67,7 @@ Box_cutout_angled_ceiling = 8;
 Close_angle = 0; // [0:90]
 
 Back_side_length = Box_height_outer - Thickness / 2 - Hinge_offset;
+Commander_window = true;
 
 Separator_1 = 42;
 Separator_2 = 0;
@@ -92,7 +94,7 @@ Dice_box_thickness = 2;
 Dice_box_up = Box_thickness + Box_clearance;
 Dice_box_up_inside = Dice_box_up + Thickness / 2 + Hinge_offset;
 
-Dice_box_open_angle = 90; // [0:90]
+Dice_box_open_angle = 0; // [0:90]
 Dice_box_out = 120; // [0:150]
 Dice_box_hinge_length = Box_width + Box_thickness - 2 * Box_clearance;
 Dice_box_align_z = false;
@@ -107,9 +109,9 @@ Dice_box_organizer_clearance = 0;
 Dice_box_organizer_display_dice = true;
 
 /* [Box Sections] */
-Sections = "42:cards, 26:dice, 12:cards";
+Sections = "42:cards, 25:dice, 12:cards";
 
-Back_drawer_depth = 16;
+Back_drawer_depth = 0;
 
 Sections_list = str_split(Sections, " ;,", keep_nulls = false);
 Num_sections = len(Sections_list);
@@ -650,6 +652,8 @@ module dice_box(section_length) {
   dice_box_width_inner = dice_box_width_outer - 2 * Thickness;
   dice_box_floor_width = dice_box_width_outer - 2 * Hinge_offset - Thickness;
 
+  echo("Dice box width inner = ", dice_box_width_inner);
+
   dice_box_move(section_length / 2) {
 
     xflip_copy() {
@@ -702,9 +706,9 @@ module die() {
 module dice_box_half(height, inner = false, organizer = false) {
   down(Dice_box_up) {
     difference() {
-      cuboid_with_cutout_for_insert(height - 2 * Box_clearance, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
+      cuboid_with_cutout_for_insert(height - Box_clearance, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
       left(Thickness)
-        cuboid_with_cutout_for_insert(height - Dice_box_thickness - 2 * Box_clearance, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
+        cuboid_with_cutout_for_insert(height - Dice_box_thickness - Box_clearance, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Box_cutout_angled_ceiling);
     }
 
     if (organizer) {
@@ -815,7 +819,7 @@ module cover() {
               cover_back_drawer();
             }
           }
-          if (Back_drawer_depth == 0)
+          if (Back_drawer_depth == 0 && Dice_box_magnets_on_cover)
             left(Box_width / 2)
               up(Thickness / 2 - Flap_magnet_depth)
                 zrot(90)
@@ -824,9 +828,15 @@ module cover() {
         next_segment(Back_side_length) {
           difference() {
             side(Section_box_depth_outer);
-            left(Section_box_depth_outer / 2 - Back_side_length / 2 + 2 * Hinge_offset)
-              up(Thickness / 2 - Flap_magnet_depth)
-                dice_box_magnets();
+            if (Commander_window) {
+              left(Section_box_depth_outer / 2 + Hinge_offset)
+                zrot(Section_box_depth_outer > Box_width_outer ? 90 : 0)
+                  cuboid([61, 86, Thickness + 0.02], rounding = 5, edges = "Z");
+            }
+            if (Dice_box_magnets_on_cover)
+              left(Section_box_depth_outer / 2 - Back_side_length / 2 + 2 * Hinge_offset)
+                up(Thickness / 2 - Flap_magnet_depth)
+                  dice_box_magnets();
           }
           next_segment(Section_box_depth_outer) {
             flap();
@@ -1085,10 +1095,10 @@ module dice_tray_post_pos(n) {
   }
 }
 
-right(320) {
-  section_dice_box(26);
+right(-100) {
+  section_dice_box(25);
 
   fwd(Dice_box_out)
-    dice_box(26);
+    dice_box(25);
 
 }
