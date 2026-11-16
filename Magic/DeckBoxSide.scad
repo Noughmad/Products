@@ -574,10 +574,10 @@ module section_dice_box(section_length, push_hole = true) {
         }
 
         if (push_hole) {
-          up(Box_height)
+          up(Box_height_outer)
             fwd(Box_cutout_width / 2 - Box_cutout_offset)
-              xrot(-45)
-                cyl(r = section_length / 2 - 2 * Separator_thickness, h = 100);
+              xrot(-0)
+                cyl(r = section_length / 2 - 2 * Separator_thickness, h = 30, anchor = TOP);
         }
         if (Dice_box_section_top_compartment) {
           up(Box_height + Box_thickness)
