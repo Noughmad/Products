@@ -161,6 +161,7 @@ Dice_tray_stopper = true;
 Dice_tray_cover_thickness = 3;
 
 Dice_tray_open_front = false;
+Dice_tray_back_thickness = 3;
 
 
 module hinge(inner, in_place = true, length = Box_width_outer) {
@@ -941,6 +942,13 @@ module dice_tray_frame() {
                 dice_tray_stopper(Dice_tray_wall_thickness + 2 * Box_clearance, clearance = Box_clearance);
         }
     }
+
+    // Magnet hole
+    fwd(Tray_width_outer / 2 - Dice_tray_wall_thickness)
+      up(Dice_tray_height / 2)
+        xrot(90)
+          magnet_hole();
+
   }
 
   // Cover
@@ -977,9 +985,14 @@ module dice_tray_drawer() {
     difference() {
       back(Dice_tray_wall_thickness / 2 + Box_clearance / 2)
         cuboid([Dice_tray_drawer_width, Tray_width_outer - Dice_tray_wall_thickness - 2 * Box_clearance, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
-      back(Dice_tray_wall_thickness / 2 + Box_clearance / 2)
+      back(Dice_tray_wall_thickness / 2 + Box_clearance / 2 + (Dice_tray_back_thickness - Box_thickness) / 2)
         up(Dice_box_thickness)
-          cuboid([Dice_tray_drawer_width - 2 * Dice_box_thickness, Tray_width_outer - Dice_tray_wall_thickness - Box_clearance - 2 * Dice_box_thickness, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
+          cuboid([Dice_tray_drawer_width - 2 * Dice_box_thickness, Tray_width_outer - Dice_tray_wall_thickness - Box_clearance - Dice_box_thickness - Dice_tray_back_thickness, Dice_tray_height - Box_thickness - 2 * Box_clearance], anchor = BOTTOM);
+      // Magnet hole
+      fwd(Tray_width_outer / 2 - Dice_tray_wall_thickness - Box_clearance)
+        up(Dice_tray_height / 2 - Box_thickness - Box_clearance)
+          xrot(-90)
+            magnet_hole();
     }
   }
 
@@ -1000,7 +1013,7 @@ module dice_tray_drawer() {
 }
 
 if (Include_dice_tray) {
-  right(446 + 2 * Section_box_depth_outer) {
+  left(Section_box_depth_outer) {
     dice_tray_frame();
     back(Dice_tray_drawer_out)
       dice_tray_drawer();
