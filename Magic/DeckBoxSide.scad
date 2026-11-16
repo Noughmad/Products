@@ -107,7 +107,9 @@ Dice_box_organizer_clearance = 0;
 Dice_box_organizer_display_dice = true;
 
 /* [Box Sections] */
-Sections = "12:cards, 26:dice, 42:cards";
+Sections = "42:cards, 26:dice, 12:cards";
+
+Back_drawer_depth = 16;
 
 Sections_list = str_split(Sections, " ;,", keep_nulls = false);
 Num_sections = len(Sections_list);
@@ -140,7 +142,7 @@ function section_size(i) =
 
 echo(Sections_list);
 
-Box_depth = cumulative_section_pos(Num_sections);
+Box_depth = cumulative_section_pos(Num_sections) + Back_drawer_depth;
 Box_depth_outer = Box_depth + Box_thickness + Box_front_thickness;
 
 /* [Dice tray under the cards] */
@@ -730,8 +732,12 @@ module section_back() {
     cuboid([Box_thickness - Separator_thickness / 2, Box_width_outer, Box_height + Box_thickness], anchor = BOTTOM + RIGHT) {
       position(BOTTOM + LEFT)
         orient(LEFT)
-          back(Thickness / 2)
-            hinge(in_place = First_hinge_in_place);
+          back(Thickness / 2) {
+            if (Back_drawer_depth > 0)
+              cuboid([Box_width_outer, Thickness, Back_drawer_depth], anchor = BOTTOM);
+            up(Back_drawer_depth)
+              hinge(in_place = First_hinge_in_place);
+          }
     }
 }
 
@@ -788,16 +794,32 @@ module whole_box_in_sections() {
 
 Section_box_depth_outer = Box_depth + Box_thickness + Box_front_thickness - Separator_thickness;
 
+module cover_back_drawer() {
+  left(Hinge_offset + Back_side_length / 2)
+    up(Back_drawer_depth / 2 + Thickness / 2)
+      difference() {
+        cuboid([Back_side_length - 2 * Box_clearance, Box_width_outer, Back_drawer_depth]);
+        up(Thickness)
+          cuboid([Back_side_length - 2 * Box_thickness - 2 * Box_clearance, Box_width_outer - 2 * Box_thickness, Back_drawer_depth]);
+      }
+}
+
 module cover() {
   up(Thickness / 2)
     left(Box_thickness - Separator_thickness / 2 + Hinge_offset)
       first_segment() {
         difference() {
-          side(Back_side_length, start_in_place = First_hinge_in_place);
-          left(Box_width / 2)
-            up(Thickness / 2 - Flap_magnet_depth)
-              zrot(90)
-                dice_box_magnets();
+          union() {
+            side(Back_side_length, start_in_place = First_hinge_in_place);
+            if (Back_drawer_depth > 0) {
+              cover_back_drawer();
+            }
+          }
+          if (Back_drawer_depth == 0)
+            left(Box_width / 2)
+              up(Thickness / 2 - Flap_magnet_depth)
+                zrot(90)
+                  dice_box_magnets();
         }
         next_segment(Back_side_length) {
           difference() {
@@ -1008,10 +1030,11 @@ module box_sections_dynamic() {
   }
 
   right(cumulative_section_pos(Num_sections))
-    xflip() {
+    xflip()
       section_back();
+  right(Box_depth)
+    xflip()
       cover();
-    }
 }
 
 maybe_right_handed()
