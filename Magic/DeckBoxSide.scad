@@ -997,7 +997,7 @@ module dice_tray_drawer() {
       back(Tray_width_outer / 2)
         up(Dice_tray_height / 2 - (Box_thickness + Box_clearance) / 2)
           back(5)
-            cuboid([50, 22, 22], rounding = 11);
+            cuboid([40, 20, 20], rounding = 10);
     }
   }
 
@@ -1018,14 +1018,14 @@ module dice_tray_drawer() {
       difference() {
         front_half()
           back(5)
-            cuboid([54, 26, 26], rounding = 11);
+            cuboid([44, 24, 24], rounding = 10);
         back(5)
-          cuboid([50, 22, 22], rounding = 11);
+          cuboid([40, 20, 20], rounding = 10);
       }
 
       front_half() {
         back(5)
-          cuboid([2, 26.1, 26.1], rounding = 11, edges = "X");
+          cuboid([2, 20.1, 20.1], rounding = 10, edges = "X");
         back(5)
           cuboid([6, 12, Dice_tray_height - 2 * Dice_tray_wall_thickness]);
       }
