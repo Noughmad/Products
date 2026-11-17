@@ -716,13 +716,13 @@ module dice_box_half(height, inner = false, organizer = false) {
       intersection() {
         cuboid_with_cutout_for_insert(height - 2 * Box_clearance, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Thumb_notch_angled_ceiling);
 
-        up(Dice_box_up)
+        up(Dice_box_up + 2 * Hinge_offset + 2 * Box_clearance)
           union() {
             fwd(Box_width_outer / 2 - Box_clearance - Dice_box_thickness - 2 * 16 - 2 * Dice_box_organizer_clearance) {
-              cuboid([height, Dice_box_thickness, Box_height_outer], anchor = BOTTOM + FRONT + RIGHT, chamfer = 2 / 3 * height, edges = [LEFT + BOTTOM]);
+              cuboid([height, Dice_box_thickness, Box_height_outer], anchor = BOTTOM + FRONT + RIGHT, chamfer = 0.5 * height, edges = [LEFT + BOTTOM]);
             }
             back(Box_width_outer / 2 - Box_thickness - Box_clearance - Dice_box_thickness - 3 * 16 - 2 * Dice_box_organizer_clearance) {
-              cuboid([height, Dice_box_thickness, Box_height_outer], anchor = BOTTOM + BACK + RIGHT, chamfer = 2 / 3 * height, edges = [LEFT + BOTTOM]);
+              cuboid([height, Dice_box_thickness, Box_height_outer], anchor = BOTTOM + BACK + RIGHT, chamfer = 0.5 * height, edges = [LEFT + BOTTOM]);
             }
 
           }
