@@ -30,6 +30,8 @@ Box_clearance = 0.25;
 Hinge_segments = 9;
 // Set to false if the box doesn't fit on the build plate in one piece
 First_hinge_in_place = false;
+// Set to false if the cover still doesn't fit on the build plate
+Second_hinge_in_place = true;
 Hinge_pin_diam = 2;
 
 /* [Magnets] */
@@ -168,7 +170,7 @@ module hinge(inner, in_place = true, length = Box_width_outer) {
   knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
 }
 
-module side(length = Box_depth, start_in_place = true) {
+module side(length = Box_depth, start_in_place = true, end_in_place = true) {
   translate([-length / 2 - Hinge_offset, 0, 0])
     cuboid([length, Box_width_outer, Thickness]) {
       position(RIGHT)
@@ -176,7 +178,7 @@ module side(length = Box_depth, start_in_place = true) {
           hinge(true, in_place = start_in_place);
       position(LEFT)
         orient(anchor = LEFT)
-          hinge(false);
+          hinge(false, in_place = end_in_place);
     }
 }
 
@@ -815,7 +817,7 @@ module cover() {
       first_segment() {
         difference() {
           union() {
-            side(Back_side_length, start_in_place = First_hinge_in_place);
+            side(Back_side_length, start_in_place = First_hinge_in_place, end_in_place = Second_hinge_in_place);
             if (Back_drawer_depth > 0) {
               cover_back_drawer();
             }
@@ -828,7 +830,7 @@ module cover() {
         }
         next_segment(Back_side_length) {
           difference() {
-            side(Section_box_depth_outer);
+            side(Section_box_depth_outer, start_in_place = First_hinge_in_place);
             if (Commander_window) {
               left(Section_box_depth_outer / 2 + Hinge_offset)
                 zrot(Section_box_depth_outer > Box_width_outer ? 90 : 0)
