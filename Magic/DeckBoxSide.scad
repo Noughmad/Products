@@ -1003,16 +1003,23 @@ module dice_tray_drawer() {
     }
   }
 
-  // Stopper
-  up(Dice_tray_height - Box_clearance)
-    back()
-      xflip_copy() {
-        left(Tray_length_outer / 2 - Dice_tray_wall_thickness - Box_clearance)
-          bottom_half()
-            left_half()
-              fwd(Tray_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - 3 * Box_clearance / 2)
-                dice_tray_stopper(Dice_tray_wall_thickness);
-      }
+  if (Dice_tray_drawer_stopper) {
+    // Stopper
+    up(Dice_tray_height - Box_clearance)
+      back()
+        xflip_copy() {
+          left(Tray_length_outer / 2 - Dice_tray_wall_thickness - Box_clearance)
+            bottom_half()
+              left_half()
+                fwd(Tray_width_outer / 2 - 3 * Dice_tray_wall_thickness / 2 - 3 * Box_clearance / 2)
+                  dice_tray_stopper(Dice_tray_wall_thickness);
+        }
+
+    // Higher front plate
+    up(Dice_tray_height - Box_clearance)
+      back(Tray_width_outer / 2 - Box_thickness / 2 - Box_clearance / 2)
+        cuboid([Dice_tray_drawer_width, Box_thickness, Dice_tray_cover_thickness], anchor = BOTTOM);
+  }
 
   // A sunk handle for the drawer
   back(Tray_width_outer / 2 - Box_clearance)
