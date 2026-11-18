@@ -70,6 +70,8 @@ Close_angle = 0; // [0:90]
 
 Back_side_length = Box_height_outer - Thickness / 2 - Hinge_offset;
 Commander_window = false;
+Commander_window_size = [58, 83];
+Commander_window_rounding = 2.5;
 
 Separator_1 = 42;
 Separator_2 = 0;
@@ -834,7 +836,7 @@ module cover() {
             if (Commander_window) {
               left(Section_box_depth_outer / 2 + Hinge_offset)
                 zrot(Section_box_depth_outer > Box_width_outer ? 90 : 0)
-                  cuboid([61, 86, Thickness + 0.02], rounding = 5, edges = "Z");
+                  cuboid([Commander_window_size[0], Commander_window_size[1], Thickness + 0.02], rounding = Commander_window_rounding, edges = "Z");
             }
             if (Dice_box_magnets_on_cover)
               left(Section_box_depth_outer / 2 - Back_side_length / 2 + 2 * Hinge_offset)

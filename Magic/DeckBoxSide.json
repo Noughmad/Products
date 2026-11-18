@@ -47,7 +47,7 @@
             "Hinge_segments": "9",
             "Hook_depth": "1.8500000000000001",
             "Hook_diameter": "5.8499999999999996",
-            "Include_dice_tray": "true",
+            "Include_dice_tray": "false",
             "Include_plugs": "false",
             "Magnet_diameter": "6.2000000000000002",
             "Magnet_offset": "8",
