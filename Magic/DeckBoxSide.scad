@@ -98,7 +98,7 @@ Dice_box_thickness = 2;
 Dice_box_up = Box_thickness + Box_clearance;
 Dice_box_up_inside = Dice_box_up + Thickness / 2 + Hinge_offset;
 
-Dice_box_open_angle = 0; // [0:90]
+Dice_box_open_angle = 90; // [0:90]
 Dice_box_out = 120; // [0:150]
 Dice_box_hinge_length = Box_width + Box_thickness - 2 * Box_clearance;
 Dice_box_align_z = false;
@@ -111,6 +111,7 @@ Dice_box_organized = "left"; // ["none", "left", "right", "both"]
 Dice_box_organized_d6_size = 16;
 Dice_box_organizer_clearance = 0;
 Dice_box_organizer_display_dice = true;
+Dice_box_end_chamfer = 2;
 
 /* [Box Sections] */
 Sections = "42:cards, 25:dice, 12:cards";
@@ -615,12 +616,12 @@ module cuboid_with_cutout(length, width, height, d, shell_offset) {
   }
 }
 
-module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset, extra_fwd = 0, extra_cutout_depth = 0) {
+module cuboid_with_cutout_for_insert(length, width, height, d, shell_offset, extra_fwd = 0, extra_cutout_depth = 0, end_chamfer = 0) {
   left(length / 2)
     difference() {
       up(d)
         fwd(extra_fwd / 2) {
-          cuboid([length, width + extra_fwd, height - d], anchor = BOTTOM);
+          cuboid([length, width + extra_fwd, height - d], anchor = BOTTOM, chamfer = end_chamfer, edges = BACK + RIGHT);
         }
       section_grab_cutout(length, shell_offset, for_insert = true, extra_cutout_depth = extra_cutout_depth);
     }
@@ -672,25 +673,30 @@ module dice_box(section_length) {
                   zflip()
                     left(Box_thickness / 2)
                       down(Thickness / 2 + Hinge_offset)
-                        hinge(false, length = Dice_box_hinge_length);
+                        intersection() {
+                          hinge(false, length = Dice_box_hinge_length);
+                          cuboid([Dice_box_hinge_length, Thickness, Thickness / 2 + Hinge_offset], anchor = BOTTOM, chamfer = Dice_box_end_chamfer, edges = [TOP + RIGHT, FRONT + RIGHT]);
+                        }
             }
       }
     }
 
     // Connecting bottom wall
     fwd(Box_thickness / 2)
-      difference() {
-        cuboid([dice_box_floor_width, Dice_box_hinge_length, Thickness], anchor = BOTTOM) {
-          position(RIGHT)
-            orient(anchor = RIGHT)
-              xflip()
+      intersection() {
+        difference() {
+          cuboid([dice_box_floor_width, Dice_box_hinge_length, Thickness], anchor = BOTTOM, chamfer = Dice_box_end_chamfer, edges = BOTTOM + BACK) {
+            position(RIGHT)
+              orient(anchor = RIGHT)
+                xflip()
+                  hinge(true, length = Dice_box_hinge_length);
+            position(LEFT)
+              orient(anchor = LEFT)
                 hinge(true, length = Dice_box_hinge_length);
-          position(LEFT)
-            orient(anchor = LEFT)
-              hinge(true, length = Dice_box_hinge_length);
-        }
-        dice_box_magnets();
+          }
+          dice_box_magnets();
 
+        }
       }
   }
 }
@@ -711,9 +717,16 @@ module die() {
 module dice_box_half(height, inner = false, organizer = false) {
   down(Dice_box_up) {
     difference() {
-      cuboid_with_cutout_for_insert(height - Box_clearance, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Thumb_notch_angled_ceiling);
+      cuboid_with_cutout_for_insert(height - Box_clearance, Box_width - 2 * Box_clearance, Box_height, Dice_box_up_inside, shell_offset = Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Thumb_notch_angled_ceiling, end_chamfer = Dice_box_end_chamfer);
       left(Thickness)
         cuboid_with_cutout_for_insert(height - Dice_box_thickness - Box_clearance, Box_width - 2 * Box_clearance - 2 * Dice_box_thickness, Box_height, Dice_box_up_inside, shell_offset = Dice_box_thickness + Box_thickness + Box_clearance, extra_fwd = Box_thickness, extra_cutout_depth = Thumb_notch_angled_ceiling);
+
+      // Slight chamfer at the edge that enters the dice box section
+      up(Box_height - Thumb_notch_depth - Thumb_notch_angled_ceiling)
+        back(Box_width / 2 - Box_clearance)
+          xrot(45)
+            cuboid([height, Dice_box_end_chamfer * sqrt(2), Dice_box_end_chamfer * sqrt(2)], anchor = RIGHT);
+
     }
 
     if (organizer) {
