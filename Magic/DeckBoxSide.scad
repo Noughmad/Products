@@ -567,8 +567,14 @@ module section_dice_box(section_length, push_hole = true) {
           // Section front and back half-walls
           zrot(90)
             yflip_copy()
-              back(section_length / 2)
+              back(section_length / 2) {
                 wall(Section_wall_half_thickness, Box_width_outer);
+                fwd(Section_wall_half_thickness)
+                  up(Box_thickness)
+                    yrot(-90)
+                      yflip()
+                        rounding_edge_mask(l = Box_width_outer, r = Thickness / 2 - Box_clearance);
+              }
           // Floor with magnets
           difference() {
             cuboid([section_length, Box_width_outer, Box_thickness], anchor = BOTTOM);
@@ -579,6 +585,11 @@ module section_dice_box(section_length, push_hole = true) {
           // Side wall
           back(Box_width_outer / 2)
             wall(Box_thickness, section_length);
+          back(Box_width / 2)
+            up(Box_thickness)
+              yrot(-90)
+                yflip()
+                  chamfer_edge_mask(l = section_length, chamfer = Dice_box_end_chamfer - Box_clearance);
         }
 
         if (push_hole) {
