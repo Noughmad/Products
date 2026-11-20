@@ -9,21 +9,28 @@ Box_width = 94;
 Box_height = 73;
 
 /* [Other sizes (mm)] */
+// Thickness of the cover, must be large enough to accommodate hinges
 Thickness = 3.25;
+// Thickness of the box walls
 Box_thickness = 2.5;
+// Thickness of the front wall, must be large enough to accomotade magnets
 Box_front_thickness = 3;
+// Thickness of separators between box sections
 Separator_thickness = 2;
 
 Flap_length = 44;
 Flap_rounding = 12;
 
+// Cutout on the front for easier opening
 Handle_cut_length = 20;
 Opening_handle_depth = 1.5;
 Opening_handle_offset = sqrt(Thickness) - Opening_handle_depth;
 
+// Slight rounding inside the box for easier card insertion
 Top_rounding_size = 8;
 Top_rounding_radius = 40;
 
+// Clearance between the dice box and the main box
 Box_clearance = 0.25;
 
 /* [Hinges] */
@@ -32,15 +39,24 @@ Hinge_segments = 9;
 First_hinge_in_place = false;
 // Set to false if the cover still doesn't fit on the build plate
 Second_hinge_in_place = true;
-Hinge_pin_diam = 2;
+// Size of the hole in non-in-place hinges. 2mm fits 1.75mm filament.
+Hinge_pin_diameter = 2;
 
 /* [Magnets] */
+Magnet_diameter = 6;
+// 0.2 for a tight press-fit, can be increased if you use glue
+Magnet_diameter_clearance = 0.2;
+Magnet_hole_diameter = Magnet_diameter + Magnet_diameter_clearance;
 
-Magnet_diameter = 6.2;
+Magnet_depth = 2;
+Magnet_depth_clearance = 0.15;
+
+// Offset from the lid magnets to the edge of the box
 Magnet_offset = 8;
-Flap_magnet_depth = 2.15;
-Box_magnet_depth = 2.15;
+Flap_magnet_depth = Magnet_depth + Magnet_depth_clearance;
+Box_magnet_depth = Magnet_depth + Magnet_depth_clearance;
 
+// How many magnets to attach the dice box
 Dice_box_magnet_count = 2;
 Dice_box_magnet_distance = 30;
 Dice_box_magnets_on_cover = false;
@@ -52,8 +68,6 @@ Box_width_outer = Box_width + 2 * Box_thickness;
 Box_height_outer = Box_height + Box_thickness;
 
 Hinge_offset = Thickness / 2 + 0.2;
-
-Sideboard_separator_offset = 1;
 
 /* [Cutout for grabbing cards] */
 
@@ -73,22 +87,16 @@ Commander_window = false;
 Commander_window_size = [58, 83];
 Commander_window_rounding = 2.5;
 
-Separator_1 = 42;
-Separator_2 = 0;
-Separator_3 = 0;
-Separator_4 = 0;
-
-Separators = [Separator_1, Separator_2, Separator_3, Separator_4];
-
-Include_plugs = false;
-
 top_rounding_angle = asin(Top_rounding_size / Top_rounding_radius);
 top_rounding_offset = Top_rounding_radius * (1 - cos(top_rounding_angle));
 
+// Place magnets on the inside of the front plate, not outside, for a better look but weaker closing
 Box_magnets_inside = false;
+
+// Use small hooks on the flap to prevent accidental opening
 Closing_hooks = true;
-Hook_diameter = 5.85;
-Hook_depth = 1.85;
+Hook_diameter = Magnet_diameter - Magnet_diameter_clearance;
+Hook_depth = Magnet_depth - Magnet_depth_clearance;
 
 Box_front_delta = (Box_front_thickness - Box_thickness) / 2;
 
@@ -98,32 +106,35 @@ Dice_box_thickness = 2;
 Dice_box_up = Box_thickness + Box_clearance;
 Dice_box_up_inside = Dice_box_up + Thickness / 2 + Hinge_offset;
 
+// Display only, set to 0 to see if it fits, and to 90 for printing
 Dice_box_open_angle = 90; // [0:90]
+// Display only, set to a low value to see if it fits, to greater than box width for printing
 Dice_box_out = 120; // [0:150]
 Dice_box_hinge_length = Box_width + Box_thickness - 2 * Box_clearance;
+// Display only, set to true to see if it fits, and to false for printing
 Dice_box_align_z = false;
 
+// An extra compartment at the top of the thumb cutout for a single die
 Dice_box_section_top_compartment = true;
 Dice_cut_shape = "d20"; // ["full", "d20", "d6", "none"]
 Dice_cut_size = 22;
 Dice_cut_outside = true;
+
+// An organizer inside the dice box to prevent dice from rattling
 Dice_box_organized = "left"; // ["none", "left", "right", "both"]
 Dice_box_organized_d6_size = 16;
 Dice_box_organizer_clearance = 0;
-Dice_box_organizer_display_dice = true;
 Dice_box_end_chamfer = 2;
 
 /* [Box Sections] */
+// List of sections, formatted as <size>:<type>, separated by commas. Sizes are in mm, types are "cards" and "dice"
 Sections = "42:cards, 25:dice, 12:cards";
 
+// An optional storage tray at the back of the box
 Back_drawer_depth = 0;
 
 Sections_list = str_split(Sections, " ;,", keep_nulls = false);
 Num_sections = len(Sections_list);
-
-echo(Sections_list);
-echo(Sections_list[0]);
-echo(str_split(Sections_list[0], ":"));
 
 Sections_sizes = [
   for (i = [0:Num_sections - 1])
@@ -134,10 +145,6 @@ Sections_types = [
     str_split(Sections_list[i], ":")[1]
 ];
 
-
-echo(Sections_sizes);
-echo(Sections_types);
-
 function cumulative_section_pos(n) =
   sum([
     for (i = [0:n - 1])
@@ -146,8 +153,6 @@ function cumulative_section_pos(n) =
 
 function section_size(i) =
   parse_float(str_split(Sections_list[i], ":")[1]);
-
-echo(Sections_list);
 
 Box_depth = cumulative_section_pos(Num_sections) + Back_drawer_depth;
 Box_depth_outer = Box_depth + Box_thickness + Box_front_thickness;
@@ -170,7 +175,7 @@ Dice_tray_back_thickness = 3;
 
 
 module hinge(inner, in_place = true, length = Box_width_outer) {
-  knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diam, knuckle_diam = Thickness, inner = inner, in_place = in_place);
+  knuckle_hinge(length = length, segs = Hinge_segments, offset = Hinge_offset, arm_height = 0, arm_angle = 90, pin_diam = Hinge_pin_diameter, knuckle_diam = Thickness, inner = inner, in_place = in_place);
 }
 
 module side(length = Box_depth, start_in_place = true, end_in_place = true) {
@@ -433,36 +438,6 @@ module box() {
   }
 }
 
-module sideboard_separator() {
-  difference() {
-    cuboid([Thickness, Box_width - 2 * Sideboard_separator_offset, Box_height - 2 * Sideboard_separator_offset], chamfer = 1);
-    down(Box_height_outer / 2 - Box_height / 2 + Sideboard_separator_offset)
-      grab_cutout();
-  }
-}
-
-/*
-
-right(200)
-rotate([0, 90, 0])
-sideboard_separator();
-
-*/
-
-// whole_box();
-
-module hinge_cap() {
-  cylinder(h = 4, r = (Hinge_pin_diam - 0.15) / 2);
-}
-
-if (Include_plugs) {
-  right(20)
-    ydistribute() {
-      hinge_cap();
-      hinge_cap();
-    }
-}
-
 module top_rounding(length) {
   difference() {
     cuboid([Top_rounding_size, length, Top_rounding_size]);
@@ -668,8 +643,6 @@ module dice_box(section_length) {
   dice_box_width_outer = section_length - Separator_thickness - 2 * Box_clearance;
   dice_box_width_inner = dice_box_width_outer - 2 * Thickness;
   dice_box_floor_width = dice_box_width_outer - 2 * Hinge_offset - Thickness;
-
-  echo("Dice box width inner = ", dice_box_width_inner);
 
   dice_box_move(section_length / 2) {
 
@@ -1079,7 +1052,6 @@ if (Include_dice_tray) {
 Angled_ceiling_bridging = 0;
 
 module angled_ceiling(length, width, height) {
-  echo("Ceiling angle", atan2(height, ((length - Angled_ceiling_bridging) / 2)));
   difference() {
     union() {
       cuboid([length, width, height], anchor = TOP + FRONT);
