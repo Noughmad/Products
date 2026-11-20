@@ -98,13 +98,16 @@ Side_panels_distance = 10;
 // If not full size, sets the size of the side panels
 Side_panels_custom_size = [40, 60];
 Side_panels_position = "c"; // [c:Center of the box, s:"Largest section"]
-Side_panels_cutout_thicknes = 1;
+Side_panels_cutout_thickness = 1;
 // If greater than side panels cutout thickness, panels will stick out
 Side_panels_thickness = 1;
 Side_panels_clearance = 0.15;
 
 // If WUBRG is selected and this is not empty, cutouts will be made only for these
 Side_panels_wubrg_colors = "WB";
+
+// Include 3D mana symbols on WUBRG side panels
+Side_panels_mana_symbols = "n"; // [n:None, c:Color, neg:Negative, pos:Positive]
 
 // Place magnets on the inside of the front plate, not outside, for a better look but weaker closing
 Box_magnets_inside = false;
@@ -1154,8 +1157,24 @@ right(-100) {
 }
 */
 
-module side_panel_circle(r, thickness) {
-  cyl(r = r, h = thickness, anchor = BOTTOM);
+module side_panel_circle(letter, r, thickness, cutout = false) {
+  difference() {
+    cyl(r = r, h = thickness, anchor = BOTTOM);
+    if (!cutout && Side_panels_mana_symbols == "neg") {
+      linear_extrude(thickness + 0.01) {
+        import(file = str(letter, ".svg"), center = true);
+      }
+    }
+  }
+  if (!cutout && Side_panels_mana_symbols == "pos") {
+    s = r / 110;
+    color("black")
+      up(thickness)
+        scale([s, s, 1])
+          linear_extrude(0.2) {
+            import(file = str(letter, ".svg"), center = true);
+          }
+  }
 }
 
 WUBRG = "WUBRG";
@@ -1167,7 +1186,7 @@ module side_panel(cutout = false) {
   size = Side_panels_full_size ? [Section_box_depth_outer - 2 * Side_panels_distance, Box_height_outer - 2 * Side_panels_distance] : Side_panels_custom_size;
   min_size = min(size[0], size[1]);
   c = cutout ? Side_panels_clearance : 0;
-  thickness = cutout ? Side_panels_cutout_thicknes + c : Side_panels_thickness;
+  thickness = cutout ? Side_panels_cutout_thickness + c : Side_panels_thickness;
   if (Side_panels == "s" || Side_panels == "r") {
     rounding = (Side_panels == "r") ? 2.5 : 0;
     cuboid([size[0] + 2 * c, size[1] + 2 * c, thickness], rounding = rounding, edges = "Z", anchor = BOTTOM);
@@ -1175,13 +1194,15 @@ module side_panel(cutout = false) {
     circle_radius = min_size / 7;
     major_radius = min_size / 2 - circle_radius;
     for(i = [0:4]) {
-      if (wubrg_enabled(WUBRG[i]))
+      letter = WUBRG[i];
+      if (wubrg_enabled(letter))
         zrot(-i * 72)
           back(major_radius)
-            side_panel_circle(circle_radius + c, thickness);
+            zrot(i * 72)
+              side_panel_circle(letter, circle_radius + c, thickness);
     }
     if (Side_panels == "wc") {
-      side_panel_circle(circle_radius + r, thickness);
+      side_panel_circle("C", circle_radius + c, thickness);
     }
   } else if (Side_panels == "c") {
     cyl(r = min_size / 2 + c, h = thickness);
