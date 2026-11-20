@@ -90,6 +90,22 @@ Commander_window_rounding = 2.5;
 top_rounding_angle = asin(Top_rounding_size / Top_rounding_radius);
 top_rounding_offset = Top_rounding_radius * (1 - cos(top_rounding_angle));
 
+// Cutouts on the sides of the box for custom panels
+Side_panels = "n"; // [n:None, s:Square, r:Rounded, c:Circle, w:WUBRG, wc:"WUBRG and colorless"]
+Side_panels_full_size = true;
+// If full size, how much are the side panels smaller than the wall
+Side_panels_distance = 10;
+// If not full size, sets the size of the side panels
+Side_panels_custom_size = [40, 60];
+Side_panels_position = "c"; // [c:Center of the box, s:"Largest section"]
+Side_panels_cutout_thicknes = 1;
+// If greater than side panels cutout thickness, panels will stick out
+Side_panels_thickness = 1;
+Side_panels_clearance = 0.15;
+
+// If WUBRG is selected and this is not empty, cutouts will be made only for these
+Side_panels_wubrg_colors = "WB";
+
 // Place magnets on the inside of the front plate, not outside, for a better look but weaker closing
 Box_magnets_inside = false;
 
@@ -774,30 +790,6 @@ module section_front() {
     }
 }
 
-module whole_box_in_sections() {
-  union() {
-    right(446)
-      cover();
-    right(446)
-      section_back();
-    right(446)
-      section_cards(14);
-    right(460) {
-      union() {
-        section_dice_box(26);
-
-        fwd(Dice_box_out)
-          dice_box(26);
-      }
-    }
-    right(486) {
-      section_cards(44);
-    }
-    right(530)
-      section_front();
-  }
-}
-
 Section_box_depth_outer = Box_depth + Box_thickness + Box_front_thickness - Separator_thickness;
 
 module cover_back_drawer() {
@@ -1104,21 +1096,21 @@ module box_sections_dynamic() {
       cover();
 }
 
-maybe_right_handed()
-  yflip()
-    difference() {
-      box_sections_dynamic();
-      if (Dice_tray_attach_magnets) {
-        right(Box_depth / 2)
-          dice_tray_connector_pos()
-            magnet_hole();
+with_side_panel_cutout()
+  maybe_right_handed()
+    yflip()
+      difference() {
+        box_sections_dynamic();
+        if (Dice_tray_attach_magnets) {
+          right(Box_depth / 2)
+            dice_tray_connector_pos()
+              magnet_hole();
+        }
+        if (Dice_tray_attach_pins) {
+          right(Box_depth / 2)
+            dice_tray_post(clearance = 0.2);
+        }
       }
-      if (Dice_tray_attach_pins) {
-        right(Box_depth / 2)
-          dice_tray_post(clearance = 0.2);
-      }
-
-    }
 
 module dice_tray_connector_pos() {
   xcopies(Section_box_depth_outer - 8 * Dice_tray_wall_thickness)
@@ -1161,3 +1153,66 @@ right(-100) {
 
 }
 */
+
+module side_panel_circle(r, thickness) {
+  cyl(r = r, h = thickness, anchor = BOTTOM);
+}
+
+WUBRG = "WUBRG";
+
+function wubrg_enabled(letter) =
+  Side_panels_wubrg_colors == "" || is_def(str_find(Side_panels_wubrg_colors, letter));
+
+module side_panel(cutout = false) {
+  size = Side_panels_full_size ? [Section_box_depth_outer - 2 * Side_panels_distance, Box_height_outer - 2 * Side_panels_distance] : Side_panels_custom_size;
+  min_size = min(size[0], size[1]);
+  c = cutout ? Side_panels_clearance : 0;
+  thickness = cutout ? Side_panels_cutout_thicknes + c : Side_panels_thickness;
+  if (Side_panels == "s" || Side_panels == "r") {
+    rounding = (Side_panels == "r") ? 2.5 : 0;
+    cuboid([size[0] + 2 * c, size[1] + 2 * c, thickness], rounding = rounding, edges = "Z", anchor = BOTTOM);
+  } else if (Side_panels == "w" || Side_panels == "wc") {
+    circle_radius = min_size / 7;
+    major_radius = min_size / 2 - circle_radius;
+    for(i = [0:4]) {
+      if (wubrg_enabled(WUBRG[i]))
+        zrot(-i * 72)
+          back(major_radius)
+            side_panel_circle(circle_radius + c, thickness);
+    }
+    if (Side_panels == "wc") {
+      side_panel_circle(circle_radius + r, thickness);
+    }
+  } else if (Side_panels == "c") {
+    cyl(r = min_size / 2 + c, h = thickness);
+  }
+}
+
+module with_side_panel_cutout() {
+  difference() {
+    children();
+
+    up(Box_height_outer / 2)
+      right(Section_box_depth_outer / 2 - Front_section_thickness)
+        zrot_copies(n = 2) {
+          back(Box_width_outer / 2)
+            xrot(90)
+              xflip()
+                side_panel(cutout = true);
+        }
+  }
+}
+
+/*
+Side_panels = "n"; // [n:None, s:Square, c:Circle, w:WUBRG, wc:"WUBRG and colorless"]
+Side_panels_full_size = true;
+Side_panels_custom_size = [40, 60];
+Side_panels_position = "c"; // [c:Center of the box, s:"Largest section"]
+Side_panels_cutout_thicknes = 1;
+// If greater than side panels cutout thickness, panels will stick out
+Side_panels_thickness = 1;
+Side_panels_clearance = 0.15;
+*/
+
+left(200)
+  side_panel();
