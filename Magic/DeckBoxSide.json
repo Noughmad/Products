@@ -328,7 +328,7 @@
             "Magnet_diameter": "6.2000000000000002",
             "Magnet_offset": "8",
             "Opening_handle_depth": "1.5",
-            "Sections": "30:cards, 16:cards, 42:cards 16:cards",
+            "Sections": "30:cards, 22.5:cards, 43:cards",
             "Separator_thickness": "2",
             "Thickness": "3.25",
             "Thumb_notch_angled_ceiling": "8",

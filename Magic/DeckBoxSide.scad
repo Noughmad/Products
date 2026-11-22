@@ -795,6 +795,8 @@ module section_front() {
 
 Section_box_depth_outer = Box_depth + Box_thickness + Box_front_thickness - Separator_thickness;
 
+echo("Size", Box_width_outer, Section_box_depth_outer);
+
 module cover_back_drawer() {
   left(Hinge_offset + Back_side_length / 2)
     up(Back_drawer_depth / 2 + Thickness / 2)
@@ -1010,9 +1012,10 @@ module dice_tray_drawer() {
         }
 
     // Higher front plate
-    up(Dice_tray_height - Box_clearance)
-      back(Tray_width_outer / 2 - Box_thickness / 2 - Box_clearance / 2)
-        cuboid([Dice_tray_drawer_width, Box_thickness, Dice_tray_cover_thickness], anchor = BOTTOM);
+    up(Dice_tray_height - Box_clearance - Dice_tray_wall_thickness) {
+      back(Tray_width_outer / 2 - Box_thickness - Box_clearance / 2)
+        cuboid([Dice_tray_drawer_width, 2 * Box_thickness, Dice_tray_cover_thickness + Dice_tray_wall_thickness], anchor = BOTTOM, chamfer = Dice_tray_wall_thickness, edges = [BOTTOM + FRONT]);
+    }
   }
 
   // A sunk handle for the drawer
